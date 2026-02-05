@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Main HUD (Fixed Syntax Error)
+-- NRC Star Wars HUD - Main HUD
 
 -- Font registration
 local function CreateHUDFont(name, fontName, size, weight)
@@ -193,7 +193,6 @@ function NRCHUD.DrawIdentity(ply, w, h)
 	draw.SimpleText(rank, "NRC_HUD_Mono", x + 18, y + 46, Color(255, 255, 255, 200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 end
 
--- FIXED: Syntax error in maxArmor check
 function NRCHUD.DrawVitals(ply, w, h)
 	local x = 35
 	local y = h - 110
@@ -202,9 +201,10 @@ function NRCHUD.DrawVitals(ply, w, h)
 	local boxH = 45
 	
 	local health = math.max(0, ply:Health())
-	local maxHealth = ply:GetMaxHealth and ply:GetMaxHealth() or 100
+	-- FIXED: Correct Lua syntax for conditional function call
+	local maxHealth = (ply.GetMaxHealth and ply:GetMaxHealth()) or 100
 	local armor = math.max(0, ply:Armor())
-	local maxArmor = 100 -- Default max armor (GetMaxArmor doesn't exist in GMod)
+	local maxArmor = 100
 	
 	-- HEALTH BAR
 	do
@@ -242,7 +242,7 @@ function NRCHUD.DrawVitals(ply, w, h)
 		draw.SimpleText(tostring(health), "NRC_HUD_Orbitron_Small", barX + barW + 30, y + boxH / 2, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 	end
 	
-	-- ARMOR BAR (ALWAYS SHOWN)
+	-- ARMOR BAR
 	do
 		local armorY = y + boxH + spacing
 		
@@ -509,4 +509,4 @@ function NRCHUD.DrawLowHealthVignette(ply, w, h)
 	end
 end
 
-print("[NRC HUD] Main HUD (Syntax Fixed) loaded!")
+print("[NRC HUD] Main HUD loaded!")
