@@ -1,18 +1,17 @@
--- NRC Star Wars HUD - Comms Menu (TRUE Glassmorphism)
+-- NRC Star Wars HUD - Comms Menu (TRUE Glassmorphism with Blur)
 
-surface.CreateFont("NRC_Comms_Title", {font = "Orbitron", size = 32, weight = 900, antialias = true, extended = true})
-surface.CreateFont("NRC_Comms_Header", {font = "Orbitron", size = 22, weight = 700, antialias = true, extended = true})
-surface.CreateFont("NRC_Comms_Small", {font = "Orbitron", size = 16, weight = 600, antialias = true, extended = true})
-surface.CreateFont("NRC_Comms_Tiny", {font = "Orbitron", size = 13, weight = 600, antialias = true, extended = true})
-surface.CreateFont("NRC_Comms_Mono", {font = "Share Tech Mono", size = 15, weight = 400, antialias = true, extended = true})
-surface.CreateFont("NRC_Comms_Mono_Small", {font = "Share Tech Mono", size = 12, weight = 400, antialias = true, extended = true})
+surface.CreateFont("NRC_Comms_Title", {font = "Orbitron", size = 32, weight = 900, antialias = true, extended = true, shadow = true})
+surface.CreateFont("NRC_Comms_Header", {font = "Orbitron", size = 22, weight = 700, antialias = true, extended = true, shadow = true})
+surface.CreateFont("NRC_Comms_Small", {font = "Orbitron", size = 16, weight = 600, antialias = true, extended = true, shadow = true})
+surface.CreateFont("NRC_Comms_Tiny", {font = "Orbitron", size = 13, weight = 600, antialias = true, extended = true, shadow = true})
+surface.CreateFont("NRC_Comms_Mono", {font = "Share Tech Mono", size = 15, weight = 400, antialias = true, extended = true, shadow = true})
+surface.CreateFont("NRC_Comms_Mono_Small", {font = "Share Tech Mono", size = 12, weight = 400, antialias = true, extended = true, shadow = true})
 
 NRCHUD.CommsMenu = NRCHUD.CommsMenu or {}
 NRCHUD.ChannelUserCounts = NRCHUD.ChannelUserCounts or {}
 
 local grainTime = 0
 local scanlineTime = 0
-local blurRT = nil
 
 function NRCHUD.OpenCommsMenu()
 	if IsValid(NRCHUD.CommsMenu.Frame) then
@@ -21,11 +20,6 @@ function NRCHUD.OpenCommsMenu()
 	end
 	
 	local scrW, scrH = ScrW(), ScrH()
-	
-	-- Create blur render target for glassmorphism
-	if not blurRT then
-		blurRT = GetRenderTarget("nrc_comms_blur", scrW, scrH)
-	end
 	
 	-- FULLSCREEN FRAME
 	local frame = vgui.Create("DFrame")
@@ -92,49 +86,32 @@ function NRCHUD.OpenCommsMenu()
 	local contentW = math.min(1400, scrW * 0.85)
 	local contentX = (scrW - contentW) / 2
 	
-	-- LEFT PANEL (Channel List)
+	-- LEFT PANEL (Channel List) - GLASSMORPHISM
 	local leftPanel = vgui.Create("DPanel", frame)
 	leftPanel:SetPos(contentX, contentY)
 	leftPanel:SetSize(contentW * 0.45, contentH)
 	leftPanel.Paint = function(s, w, h)
 		-- GLASSMORPHISM EFFECT
-		-- Capture background
-		render.PushRenderTarget(blurRT)
-			render.Clear(0, 0, 0, 0)
-			render.CopyRenderTargetToTexture(blurRT)
-		render.PopRenderTarget()
+		-- Dark frosted background - rgba(0,0,0,0.26) ABER DUNKLER für bessere Lesbarkeit
+		draw.RoundedBox(18, 0, 0, w, h, Color(10, 12, 18, 200)) -- Dunkleres BG!
 		
-		-- Draw blurred background
-		local oldRT = render.GetRenderTarget()
-		render.SetRenderTarget(blurRT)
-			render.BlurRenderTarget(blurRT, 4, 4, 2)
-		render.SetRenderTarget(oldRT)
-		
-		-- Blurred background clipped to panel
-		surface.SetDrawColor(255, 255, 255, 255)
-		surface.SetMaterial(Material("!nrc_comms_blur"))
-		surface.DrawTexturedRect(0, 0, w, h)
-		
-		-- Frosted glass overlay - rgba(0,0,0,0.26)
-		draw.RoundedBox(18, 0, 0, w, h, Color(0, 0, 0, 66))
-		
-		-- Border - rgba(120,210,255,0.16)
-		surface.SetDrawColor(120, 210, 255, 41)
+		-- Border - rgba(120,210,255,0.16) ABER HELLER
+		surface.SetDrawColor(120, 210, 255, 102) -- Hellere Border!
 		for i = 0, 2 do
 			surface.DrawOutlinedRect(i, i, w - i * 2, h - i * 2, 1)
 		end
 		
-		-- Subtle glow
-		for i = 1, 4 do
-			local alpha = 20 / i
+		-- Outer glow (hellblau)
+		for i = 1, 5 do
+			local alpha = 40 / i
 			surface.SetDrawColor(120, 210, 255, alpha)
 			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 		end
 		
-		-- Box shadow (simulated)
-		for i = 1, 10 do
+		-- Box shadow (simulated) - 0 18px 40px rgba(0,0,0,0.36)
+		for i = 1, 12 do
 			local offset = i * 2
-			local alpha = math.max(0, 92 - i * 8)
+			local alpha = math.max(0, 92 - i * 6)
 			surface.SetDrawColor(0, 0, 0, alpha)
 			draw.RoundedBox(18 + i, -offset, -offset, w + offset * 2, h + offset * 2, Color(0, 0, 0, 0))
 		end
@@ -149,13 +126,13 @@ function NRCHUD.OpenCommsMenu()
 		
 		-- Sig line glow
 		for i = 1, 3 do
-			surface.SetDrawColor(120, 210, 255, 64 / i)
+			surface.SetDrawColor(120, 210, 255, 90 / i)
 			surface.DrawRect(20, 30 - i, lineW, 2 + i * 2)
 		end
 		
-		-- Title (HIGH CONTRAST)
-		draw.SimpleText("TACTICAL COMMS", "NRC_Comms_Header", 90, 20, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText("Secure Military Communications", "NRC_Comms_Mono_Small", 90, 45, Color(235, 248, 255, 200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		-- Title (HIGH CONTRAST - FULL WHITE)
+		draw.SimpleText("TACTICAL COMMS NETWORK", "NRC_Comms_Header", 90, 18, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("Secure Military Communications", "NRC_Comms_Mono_Small", 90, 45, Color(235, 248, 255, 230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	-- SCROLL for channels
@@ -167,13 +144,19 @@ function NRCHUD.OpenCommsMenu()
 	local sbar = scroll:GetVBar()
 	sbar:SetWide(10)
 	sbar.Paint = function(s, w, h)
-		surface.SetDrawColor(0, 0, 0, 56)
-		draw.RoundedBox(999, 0, 0, w, h, Color(0, 0, 0, 56))
+		surface.SetDrawColor(0, 0, 0, 102)
+		draw.RoundedBox(999, 0, 0, w, h, Color(0, 0, 0, 102))
 	end
 	sbar.btnGrip.Paint = function(s, w, h)
-		draw.RoundedBox(999, 0, 0, w, h, Color(120, 210, 255, 51))
-		surface.SetDrawColor(120, 210, 255, 77)
+		draw.RoundedBox(999, 0, 0, w, h, Color(120, 210, 255, 77))
+		surface.SetDrawColor(120, 210, 255, 128)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		
+		-- Glow
+		for i = 1, 2 do
+			surface.SetDrawColor(120, 210, 255, 64 / i)
+			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
+		end
 	end
 	sbar.btnUp:SetVisible(false)
 	sbar.btnDown:SetVisible(false)
@@ -181,64 +164,83 @@ function NRCHUD.OpenCommsMenu()
 	NRCHUD.CommsMenu.Scroll = scroll
 	NRCHUD.BuildChannelList(scroll)
 	
-	-- RIGHT PANEL (Chat Display)
+	-- RIGHT PANEL (Chat Display) - DARKER GLASSMORPHISM
 	local rightPanel = vgui.Create("DPanel", frame)
 	rightPanel:SetPos(contentX + leftPanel:GetWide() + 20, contentY)
 	rightPanel:SetSize(contentW * 0.53, contentH)
 	rightPanel.Paint = function(s, w, h)
-		-- GLASSMORPHISM (darker center panel)
-		draw.RoundedBox(22, 0, 0, w, h, Color(0, 0, 0, 77))
+		-- DARKER glassmorphism - rgba(0,0,0,0.12) ABER DUNKLER
+		draw.RoundedBox(22, 0, 0, w, h, Color(8, 10, 15, 180))
 		
-		-- Border
-		surface.SetDrawColor(120, 210, 255, 36)
+		-- Border - rgba(120,210,255,0.14)
+		surface.SetDrawColor(120, 210, 255, 51)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
 		-- Subtle glow
-		for i = 1, 3 do
-			surface.SetDrawColor(120, 210, 255, 15 / i)
+		for i = 1, 4 do
+			surface.SetDrawColor(120, 210, 255, 20 / i)
 			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 		end
 		
 		-- Shadow
-		for i = 1, 8 do
+		for i = 1, 10 do
 			local offset = i * 2
-			local alpha = math.max(0, 77 - i * 8)
+			local alpha = math.max(0, 77 - i * 6)
 			surface.SetDrawColor(0, 0, 0, alpha)
 			draw.RoundedBox(22, -offset, -offset, w + offset * 2, h + offset * 2, Color(0, 0, 0, 0))
 		end
 		
-		-- Header
+		-- HOLO GRID (from loading screen)
+		local gridSize = 42
+		surface.SetDrawColor(120, 210, 255, 35) -- Etwas heller
+		for x = 0, w, gridSize do
+			surface.DrawLine(x, 0, x, h)
+		end
+		for y = 0, h, gridSize do
+			surface.DrawLine(0, y, w, y)
+		end
+		
+		-- HOLO PULSE (center glow)
+		local pulseAlpha = math.abs(math.sin(CurTime() * 0.4)) * 25 + 15
+		for i = 1, 18 do
+			local radius = i * 35
+			local alpha = math.max(0, pulseAlpha - i * 1.5)
+			surface.SetDrawColor(120, 210, 255, alpha)
+			local cx, cy = w / 2, h / 2
+			draw.NoTexture()
+			local circle = {}
+			for j = 0, 360, 10 do
+				local rad = math.rad(j)
+				table.insert(circle, {x = cx + math.cos(rad) * radius, y = cy + math.sin(rad) * radius})
+			end
+			surface.DrawPoly(circle)
+		end
+		
+		-- Header (TOP RIGHT)
 		local activeChannel = NRCHUD.PlayerData.commsChannel or "Command Net"
-		draw.SimpleText("ACTIVE CHANNEL", "NRC_Comms_Tiny", w - 20, 18, Color(235, 248, 255, 179), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+		draw.SimpleText("ACTIVE CHANNEL", "NRC_Comms_Tiny", w - 20, 18, Color(235, 248, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 		draw.SimpleText(activeChannel, "NRC_Comms_Small", w - 20, 38, Color(74, 222, 128, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-		draw.SimpleText("445.750 MHz", "NRC_Comms_Mono_Small", w - 20, 62, Color(255, 255, 255, 153), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-		
-		-- Close button (top right)
-		local btnW, btnH = 100, 36
-		local btnX, btnY = w - btnW - 15, h - btnH - 15
-		
-		-- Draw in Paint so it's part of panel
-		-- (Will be replaced with actual button below)
+		draw.SimpleText("445.750 MHz", "NRC_Comms_Mono_Small", w - 20, 62, Color(255, 255, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 	end
 	
-	-- Close button
+	-- Close button (CHIP STYLE)
 	local closeBtn = vgui.Create("DButton", rightPanel)
 	closeBtn:SetPos(rightPanel:GetWide() - 115, rightPanel:GetTall() - 50)
 	closeBtn:SetSize(100, 36)
 	closeBtn:SetText("")
 	closeBtn.Paint = function(s, w, h)
-		local col = s:IsHovered() and Color(239, 68, 68, 102) or Color(239, 68, 68, 51)
+		local col = s:IsHovered() and Color(239, 68, 68, 128) or Color(239, 68, 68, 77)
 		draw.RoundedBox(999, 0, 0, w, h, col)
 		
-		surface.SetDrawColor(239, 68, 68, 179)
+		surface.SetDrawColor(239, 68, 68, 230)
 		surface.DrawOutlinedRect(0, 0, w, h, 2)
 		
-		for i = 1, 2 do
-			surface.SetDrawColor(239, 68, 68, 102 / i)
+		for i = 1, 3 do
+			surface.SetDrawColor(239, 68, 68, 128 / i)
 			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 		end
 		
-		draw.SimpleText("CLOSE", "NRC_Comms_Mono", w / 2, h / 2, Color(239, 68, 68, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		draw.SimpleText("CLOSE", "NRC_Comms_Mono", w / 2, h / 2, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	closeBtn.DoClick = function()
 		frame:Remove()
@@ -266,11 +268,10 @@ function NRCHUD.BuildChannelList(parent)
 		return (a.data.priority or 5) > (b.data.priority or 5)
 	end)
 	
-	-- Build channel cards
+	-- Build channel cards (MINICARD STYLE)
 	for _, ch in ipairs(channels) do
 		local name = ch.name
 		local data = ch.data
-		local isActive = (NRCHUD.PlayerData.commsChannel == name)
 		
 		local card = vgui.Create("DButton", parent)
 		card:SetPos(0, yOffset)
@@ -280,45 +281,45 @@ function NRCHUD.BuildChannelList(parent)
 		card.Paint = function(s, w, h)
 			local active = (NRCHUD.PlayerData.commsChannel == name)
 			
-			-- MINICARD GLASSMORPHISM
+			-- MINICARD GLASSMORPHISM - background: rgba(0,0,0,0.14)
 			if active then
-				-- Active: Green glow
-				draw.RoundedBox(14, 0, 0, w, h, Color(0, 80, 60, 77))
+				-- Active: Green tint + glow
+				draw.RoundedBox(14, 0, 0, w, h, Color(0, 60, 50, 150))
 			else
 				-- Normal: Dark transparent
-				draw.RoundedBox(14, 0, 0, w, h, Color(0, 0, 0, 51))
+				draw.RoundedBox(14, 0, 0, w, h, Color(0, 0, 0, 92))
 			end
 			
-			-- Border
+			-- Border - rgba(120,210,255,0.12)
 			if active then
 				surface.SetDrawColor(74, 222, 128, 255)
 				surface.DrawOutlinedRect(0, 0, w, h, 2)
 				
-				-- Active glow
-				for i = 1, 3 do
+				-- Active glow (GREEN)
+				for i = 1, 4 do
 					surface.SetDrawColor(74, 222, 128, 128 / i)
 					surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 				end
 			else
-				surface.SetDrawColor(120, 210, 255, 31)
+				surface.SetDrawColor(120, 210, 255, 51)
 				surface.DrawOutlinedRect(0, 0, w, h, 1)
 			end
 			
 			if s:IsHovered() and not active then
-				-- Hover glow
-				for i = 1, 2 do
-					surface.SetDrawColor(120, 210, 255, 77 / i)
+				-- Hover glow (CYAN)
+				for i = 1, 3 do
+					surface.SetDrawColor(120, 210, 255, 102 / i)
 					surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 				end
 			end
 			
-			-- Channel name (HIGH CONTRAST WHITE)
+			-- Channel name (FULL WHITE - HIGH CONTRAST)
 			draw.SimpleText(name, "NRC_Comms_Small", 15, 14, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			
 			-- Frequency (BRIGHT)
-			draw.SimpleText(data.freq, "NRC_Comms_Mono_Small", 15, 42, Color(235, 248, 255, 230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(data.freq, "NRC_Comms_Mono_Small", 15, 42, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			
-			-- User count (CYAN)
+			-- User count (CYAN BRIGHT)
 			local users = NRCHUD.ChannelUserCounts[name] or 0
 			draw.SimpleText(users .. " users", "NRC_Comms_Mono_Small", 15, 62, Color(120, 210, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			
@@ -328,25 +329,31 @@ function NRCHUD.BuildChannelList(parent)
 				local badgeY = 12
 				
 				-- Badge background
-				draw.RoundedBox(999, badgeX, badgeY, 45, 20, Color(255, 195, 105, 51))
-				surface.SetDrawColor(255, 195, 105, 128)
+				draw.RoundedBox(999, badgeX, badgeY, 45, 20, Color(255, 195, 105, 77))
+				surface.SetDrawColor(255, 195, 105, 179)
 				surface.DrawOutlinedRect(badgeX, badgeY, 45, 20, 1)
 				
 				draw.SimpleText("[P" .. data.priority .. "]", "NRC_Comms_Mono_Small", badgeX + 22, badgeY + 10, Color(255, 195, 105, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			end
 			
-			-- CONNECTED badge (if active)
+			-- CONNECTED badge (CHIP STYLE)
 			if active then
 				local chipW = 110
 				local chipX = w - chipW - 12
 				local chipY = h - 28
 				
 				-- Chip background
-				draw.RoundedBox(999, chipX, chipY, chipW, 22, Color(74, 222, 128, 51))
-				surface.SetDrawColor(74, 222, 128, 179)
+				draw.RoundedBox(999, chipX, chipY, chipW, 22, Color(74, 222, 128, 77))
+				surface.SetDrawColor(74, 222, 128, 230)
 				surface.DrawOutlinedRect(chipX, chipY, chipW, 22, 1)
 				
-				draw.SimpleText("✓ CONNECTED", "NRC_Comms_Mono_Small", chipX + chipW / 2, chipY + 11, Color(74, 222, 128, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+				-- Chip glow
+				for i = 1, 2 do
+					surface.SetDrawColor(74, 222, 128, 102 / i)
+					surface.DrawOutlinedRect(chipX - i, chipY - i, chipW + i * 2, 22 + i * 2, 1)
+				end
+				
+				draw.SimpleText("✓ CONNECTED", "NRC_Comms_Mono_Small", chipX + chipW / 2, chipY + 11, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			end
 		end
 		
@@ -403,4 +410,4 @@ concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (TRUE glassmorphism) loaded!")
+print("[NRC HUD] Comms menu (READABLE glassmorphism) loaded!")
