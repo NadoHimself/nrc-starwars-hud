@@ -10,14 +10,18 @@ util.AddNetworkString("NRCHUD_DamageIndicator")
 util.AddNetworkString("NRCHUD_RequestObjectiveCreate")
 util.AddNetworkString("NRCHUD_RequestObjectiveRemove")
 util.AddNetworkString("NRCHUD_MinimapData")
+util.AddNetworkString("NRCHUD_SwitchChannel")
 
 AddCSLuaFile("nrc_hud/client/cl_init.lua")
 AddCSLuaFile("nrc_hud/client/cl_hud.lua")
 AddCSLuaFile("nrc_hud/client/cl_objectives.lua")
 AddCSLuaFile("nrc_hud/client/cl_commander_menu.lua")
+AddCSLuaFile("nrc_hud/client/cl_comms_menu.lua")
 AddCSLuaFile("nrc_hud/shared/sh_config.lua")
+AddCSLuaFile("nrc_hud/shared/sh_language.lua")
 
 include("nrc_hud/shared/sh_config.lua")
+include("nrc_hud/shared/sh_language.lua")
 
 -- Check for MRS
 if MRS then
@@ -70,7 +74,7 @@ function NRCHUD.UpdatePlayerIdentity(ply)
 	end
 	
 	-- Get job from DarkRP
-	if DarkRP and ply:getDarkRPVar then
+	if DarkRP and ply.getDarkRPVar then
 		job = ply:getDarkRPVar("job") or team.GetName(ply:Team())
 	end
 	
@@ -78,6 +82,35 @@ function NRCHUD.UpdatePlayerIdentity(ply)
 		net.WriteString(name)
 		net.WriteString(rank)
 		net.WriteString(job)
+	net.Send(ply)
+end
+
+-- Update player currency
+function NRCHUD.UpdatePlayerCurrency(ply)
+	if not IsValid(ply) then return end
+	
+	local money = 0
+	if DarkRP and ply.getDarkRPVar then
+		money = ply:getDarkRPVar("money") or 0
+	elseif ply.GetMoney then
+		money = ply:GetMoney() or 0
+	end
+	
+	net.Start("NRCHUD_UpdateCurrency")
+		net.WriteUInt(money, 32)
+	net.Send(ply)
+end
+
+-- Update player comms
+function NRCHUD.UpdatePlayerComms(ply)
+	if not IsValid(ply) then return end
+	
+	local channel = ply.NRCHUDData and ply.NRCHUDData.commsChannel or NRCHUD.Config.DefaultCommsChannel
+	local freq = ply.NRCHUDData and ply.NRCHUDData.frequency or NRCHUD.Config.DefaultFrequency
+	
+	net.Start("NRCHUD_UpdateComms")
+		net.WriteUInt(channel, 8)
+		net.WriteString(freq)
 	net.Send(ply)
 end
 
@@ -122,6 +155,23 @@ hook.Add("EntityTakeDamage", "NRCHUD_DamageIndicator", function(target, dmg)
 	net.Start("NRCHUD_DamageIndicator")
 		net.WriteString(dir)
 	net.Send(target)
+end)
+
+-- Channel switch network handler
+net.Receive("NRCHUD_SwitchChannel", function(len, ply)
+	if not IsValid(ply) then return end
+	
+	local channelName = net.ReadString()
+	
+	-- Update player data
+	if not ply.NRCHUDData then
+		ply.NRCHUDData = {}
+	end
+	
+	ply.NRCHUDData.commsChannel = channelName
+	
+	-- Broadcast to other players on same channel (optional)
+	print(string.format("[NRC HUD] %s switched to channel: %s", ply:Nick(), channelName))
 end)
 
 print("[NRC HUD] Server initialization complete!")
