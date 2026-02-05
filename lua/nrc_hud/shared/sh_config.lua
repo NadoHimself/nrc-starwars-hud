@@ -1,5 +1,7 @@
 -- NRC Star Wars HUD - Shared Configuration
 
+-- Initialize NRCHUD table first!
+NRCHUD = NRCHUD or {}
 NRCHUD.Config = NRCHUD.Config or {}
 
 -- General Settings
