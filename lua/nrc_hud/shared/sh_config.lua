@@ -66,16 +66,9 @@ NRCHUD.Config.MinimapShowAllies = true
 NRCHUD.Config.MinimapShowEnemies = true
 NRCHUD.Config.MinimapUpdateRate = 1 -- seconds
 
--- UI Positioning (adjustable)
-NRCHUD.Config.Positions = {
-	identity = {x = 30, y = ScrH() - 110},
-	health = {x = 30, y = ScrH() - 30},
-	currency = {x = 30, y = ScrH() - 165},
-	ammo = {x = ScrW() - 30, y = ScrH() - 30},
-	minimap = {x = ScrW() - 30, y = ScrH() - 120},
-	objective = {x = 30, y = 25},
-	comms = {x = ScrW() - 30, y = 25}
-}
+-- UI Positioning (CLIENT-ONLY, initialized in cl_init.lua)
+-- NOTE: Cannot use ScrH()/ScrW() in shared files!
+NRCHUD.Config.Positions = {}
 
 -- Debug function
 function NRCHUD.Debug(msg)
