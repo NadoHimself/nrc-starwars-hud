@@ -4,6 +4,8 @@ util.AddNetworkString("NRCHUD_SwitchChannel")
 util.AddNetworkString("NRCHUD_CreateCustomChannel")
 util.AddNetworkString("NRCHUD_ChannelUpdate")
 util.AddNetworkString("NRCHUD_VoiceSettings")
+util.AddNetworkString("NRCHUD_ChannelUserCount")
+util.AddNetworkString("NRCHUD_RefreshChannels")
 
 include("nrc_hud/shared/sh_comms_config.lua")
 AddCSLuaFile("nrc_hud/shared/sh_comms_config.lua")
@@ -11,6 +13,41 @@ AddCSLuaFile("nrc_hud/client/cl_comms_menu.lua")
 
 -- Custom channels storage
 NRCHUD.CustomChannels = NRCHUD.CustomChannels or {}
+NRCHUD.ChannelUsers = NRCHUD.ChannelUsers or {}
+
+-- Helper for debug
+function NRCHUD.Debug(msg)
+	if NRCHUD.Config and NRCHUD.Config.Debug then
+		print("[NRC HUD DEBUG] " .. tostring(msg))
+	end
+end
+
+-- Get user count for channel
+function NRCHUD.GetChannelUserCount(channelName)
+	local count = 0
+	for _, ply in ipairs(player.GetAll()) do
+		if IsValid(ply) and ply.NRCHUDData and ply.NRCHUDData.commsChannel == channelName then
+			count = count + 1
+		end
+	end
+	return count
+end
+
+-- Broadcast user counts to all players
+function NRCHUD.BroadcastUserCounts()
+	local counts = {}
+	for channelName, _ in pairs(NRCHUD.CommsFrequencies) do
+		counts[channelName] = NRCHUD.GetChannelUserCount(channelName)
+	end
+	
+	for _, ply in ipairs(player.GetAll()) do
+		if IsValid(ply) then
+			net.Start("NRCHUD_ChannelUserCount")
+				net.WriteTable(counts)
+			net.Send(ply)
+		end
+	end
+end
 
 -- Switch player channel
 net.Receive("NRCHUD_SwitchChannel", function(len, ply)
@@ -29,8 +66,11 @@ net.Receive("NRCHUD_SwitchChannel", function(len, ply)
 	-- Update comms display
 	NRCHUD.UpdatePlayerComms(ply)
 	
+	-- Broadcast new user counts
+	NRCHUD.BroadcastUserCounts()
+	
 	-- Voice chat integration (if supported)
-	if NRCHUD.VoiceIntegration.enabled then
+	if NRCHUD.VoiceIntegration and NRCHUD.VoiceIntegration.enabled then
 		hook.Run("NRCHUD_PlayerChannelChanged", ply, channelName, channelData)
 	end
 	
@@ -49,6 +89,11 @@ net.Receive("NRCHUD_CreateCustomChannel", function(len, ply)
 			DarkRP.notify(ply, 1, 4, "Channel name already exists!")
 		end
 		return
+	end
+	
+	-- Auto-add MHz if not present
+	if not string.find(frequency:lower(), "mhz") and not string.find(frequency:lower(), "ghz") then
+		frequency = frequency .. " MHz"
 	end
 	
 	-- Create channel
@@ -133,25 +178,29 @@ hook.Add("PlayerSpawn", "NRCHUD_AssignJobChannel", function(ply)
 			
 			NRCHUD.UpdatePlayerComms(ply)
 			
+			-- Broadcast user counts
+			timer.Simple(0.5, function()
+				NRCHUD.BroadcastUserCounts()
+			end)
+			
 			NRCHUD.Debug("Assigned " .. ply:Nick() .. " to channel: " .. assignedChannel)
 		end
 	end)
 end)
 
--- Hook for voice chat addons (e.g., vVoice, Simple Voice Chat, etc.)
+-- Hook for voice chat addons
 hook.Add("NRCHUD_PlayerChannelChanged", "NRCHUD_VoiceIntegration", function(ply, channelName, channelData)
-	-- Example integration with vVoice or other voice addons
-	-- Customize based on your voice chat addon
-	
 	if ply.NRCHUDData and ply.NRCHUDData.voiceAutoSwitch then
-		-- Example: Switch voice channel
-		-- VoiceAddon.SetChannel(ply, channelName)
-		
 		NRCHUD.Debug("Voice channel switch for " .. ply:Nick() .. ": " .. channelName)
 	end
 end)
 
--- Cleanup old custom channels (older than 24 hours)
+-- Broadcast user counts every 5 seconds
+timer.Create("NRCHUD_BroadcastUserCounts", 5, 0, function()
+	NRCHUD.BroadcastUserCounts()
+end)
+
+-- Cleanup old custom channels
 timer.Create("NRCHUD_CleanupCustomChannels", 3600, 0, function()
 	local currentTime = os.time()
 	for channelName, channelData in pairs(NRCHUD.CustomChannels) do

@@ -1,63 +1,37 @@
 -- NRC Star Wars HUD - Communications System (Server)
 
--- Update player comms channel
-function NRCHUD.SetCommsChannel(ply, channel)
-	if not IsValid(ply) then return end
-	if not NRCHUD.Config.CommsChannels[channel] then return end
-	
-	if not ply.NRCHUDData then
-		ply.NRCHUDData = {}
-	end
-	
-	ply.NRCHUDData.commsChannel = channel
-	
-	NRCHUD.UpdatePlayerComms(ply)
-end
+-- Network strings
+util.AddNetworkString("NRCHUD_UpdateComms")
+util.AddNetworkString("NRCHUD_UpdatePlayerData")
 
--- Set custom frequency
-function NRCHUD.SetFrequency(ply, frequency)
-	if not IsValid(ply) then return end
-	
-	if not ply.NRCHUDData then
-		ply.NRCHUDData = {}
-	end
-	
-	ply.NRCHUDData.frequency = frequency
-	
-	NRCHUD.UpdatePlayerComms(ply)
-end
+NRCHUD.PlayerComms = NRCHUD.PlayerComms or {}
 
--- Update player comms display
+-- Update player comms data
 function NRCHUD.UpdatePlayerComms(ply)
 	if not IsValid(ply) then return end
+	if not ply.NRCHUDData then ply.NRCHUDData = {} end
 	
-	if not ply.NRCHUDData then
-		ply.NRCHUDData = {
-			commsChannel = NRCHUD.Config.DefaultCommsChannel,
-			frequency = NRCHUD.Config.DefaultFrequency
-		}
-	end
+	local data = ply.NRCHUDData
 	
-	local channel = ply.NRCHUDData.commsChannel or NRCHUD.Config.DefaultCommsChannel
-	local frequency = ply.NRCHUDData.frequency or NRCHUD.Config.DefaultFrequency
-	
+	-- Send to client
 	net.Start("NRCHUD_UpdateComms")
-		net.WriteUInt(channel, 8)
-		net.WriteString(frequency)
+		net.WriteString(data.commsChannel or "Battalion Net")
+		net.WriteString(data.frequency or "445.750 MHz")
 	net.Send(ply)
 end
 
--- Get players on same comms channel
-function NRCHUD.GetPlayersOnChannel(channel)
-	local players = {}
-	
-	for _, ply in ipairs(player.GetAll()) do
-		if IsValid(ply) and ply.NRCHUDData and ply.NRCHUDData.commsChannel == channel then
-			table.insert(players, ply)
-		end
-	end
-	
-	return players
+-- Get player comms channel
+function NRCHUD.GetPlayerChannel(ply)
+	if not IsValid(ply) then return "Battalion Net" end
+	if not ply.NRCHUDData then return "Battalion Net" end
+	return ply.NRCHUDData.commsChannel or "Battalion Net"
 end
 
-print("[NRC HUD] Communications system loaded!")
+-- Get player frequency
+function NRCHUD.GetPlayerFrequency(ply)
+	if not IsValid(ply) then return "445.750 MHz" end
+	if not ply.NRCHUDData then return "445.750 MHz" end
+	return ply.NRCHUDData.frequency or "445.750 MHz"
+end
+
+print("[NRC HUD] Comms system loaded!")
