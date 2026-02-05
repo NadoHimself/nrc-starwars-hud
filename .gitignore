@@ -1,0 +1,22 @@
+# Garry's Mod
+*.cache
+*.db
+*.vpk
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Logs
+*.log
+errors.txt
+
+# Temporary files
+*.tmp
+*.bak
+*~
