@@ -1,103 +1,118 @@
 -- NRC Star Wars HUD - Client Initialization
 
-include("nrc_hud/shared/sh_config.lua")
+-- Initialize NRCHUD namespace
+NRCHUD = NRCHUD or {}
 
+-- Initialize PlayerData table
 NRCHUD.PlayerData = NRCHUD.PlayerData or {
 	name = "Unknown",
-	rank = "Trooper",
 	job = "Unknown",
+	rank = "Trooper",
+	commsChannel = "Battalion Net",
 	currency = 0,
-	commsChannel = 1,
-	frequency = "445.7 MHz",
-	objectives = {},
-	currentObjective = nil
+	objective = "",
+	location = "GRID 447-B",
+	voiceAutoSwitch = false
 }
 
--- Receive identity update
-net.Receive("NRCHUD_UpdateIdentity", function()
-	NRCHUD.PlayerData.name = net.ReadString()
-	NRCHUD.PlayerData.rank = net.ReadString()
-	NRCHUD.PlayerData.job = net.ReadString()
-	
-	NRCHUD.Debug("Identity updated: " .. NRCHUD.PlayerData.name)
-end)
-
--- Receive currency update
-net.Receive("NRCHUD_UpdateCurrency", function()
-	NRCHUD.PlayerData.currency = net.ReadUInt(32)
-end)
-
--- Receive comms update
-net.Receive("NRCHUD_UpdateComms", function()
-	NRCHUD.PlayerData.commsChannel = net.ReadUInt(8)
-	NRCHUD.PlayerData.frequency = net.ReadString()
-end)
-
--- Hit marker
+-- Initialize other tables
+NRCHUD.DamageIndicators = NRCHUD.DamageIndicators or {}
 NRCHUD.ShowingHitMarker = false
-net.Receive("NRCHUD_HitMarker", function()
-	NRCHUD.ShowingHitMarker = true
-	surface.PlaySound("buttons/lightswitch2.wav")
+NRCHUD.Objectives = NRCHUD.Objectives or {}
+NRCHUD.ChannelUserCounts = NRCHUD.ChannelUserCounts or {}
+
+-- Update player data from DarkRP
+local function UpdatePlayerData()
+	local ply = LocalPlayer()
+	if not IsValid(ply) then return end
 	
-	timer.Simple(NRCHUD.Config.HitMarkerDuration, function()
-		NRCHUD.ShowingHitMarker = false
+	-- Update name
+	NRCHUD.PlayerData.name = ply:Nick()
+	
+	-- Update job
+	if DarkRP and ply.getDarkRPVar then
+		NRCHUD.PlayerData.job = ply:getDarkRPVar("job") or team.GetName(ply:Team()) or "Civilian"
+	else
+		NRCHUD.PlayerData.job = team.GetName(ply:Team()) or "Civilian"
+	end
+	
+	-- Update currency
+	if DarkRP and ply.getDarkRPVar then
+		NRCHUD.PlayerData.currency = ply:getDarkRPVar("money") or 0
+	elseif ply.GetMoney then
+		NRCHUD.PlayerData.currency = ply:GetMoney() or 0
+	end
+end
+
+-- Update on spawn
+hook.Add("InitPostEntity", "NRCHUD_InitPlayerData", function()
+	timer.Simple(1, function()
+		UpdatePlayerData()
 	end)
 end)
 
--- Damage indicator
-NRCHUD.DamageIndicators = NRCHUD.DamageIndicators or {}
-net.Receive("NRCHUD_DamageIndicator", function()
-	local direction = net.ReadString()
-	
-	NRCHUD.DamageIndicators[direction] = CurTime() + NRCHUD.Config.DamageIndicatorDuration
-	surface.PlaySound("player/pl_pain" .. math.random(5, 7) .. ".wav")
+-- Update periodically
+timer.Create("NRCHUD_UpdatePlayerData", 5, 0, function()
+	UpdatePlayerData()
 end)
 
--- Get grid coordinates for location display
-function NRCHUD.GetGridLocation()
+-- Hit marker system
+function NRCHUD.ShowHitMarker()
+	NRCHUD.ShowingHitMarker = true
+	timer.Simple(0.15, function()
+		NRCHUD.ShowingHitMarker = false
+	end)
+end
+
+-- Damage indicator system
+function NRCHUD.ShowDamageIndicator(direction)
+	NRCHUD.DamageIndicators[direction] = CurTime() + (NRCHUD.Config.DamageIndicatorDuration or 0.4)
+end
+
+-- Detect hit
+hook.Add("OnEntityCreated", "NRCHUD_DetectHit", function(ent)
+	if not IsValid(ent) then return end
+	
+	timer.Simple(0, function()
+		if not IsValid(ent) then return end
+		
+		if ent:GetClass() == "entityflame" then
+			local owner = ent:GetOwner()
+			if IsValid(owner) and owner == LocalPlayer() then
+				NRCHUD.ShowHitMarker()
+			end
+		end
+	end)
+end)
+
+-- Detect damage taken
+hook.Add("EntityTakeDamage", "NRCHUD_DetectDamage", function(target, dmg)
+	if target ~= LocalPlayer() then return end
+	
+	local attacker = dmg:GetAttacker()
+	if not IsValid(attacker) then return end
+	
+	-- Calculate direction
 	local ply = LocalPlayer()
-	if not IsValid(ply) then return "GRID 000-A" end
+	local attackerPos = attacker:GetPos()
+	local playerPos = ply:GetPos()
+	local playerAng = ply:EyeAngles().y
 	
-	local pos = ply:GetPos()
-	local gridX = math.floor(pos.x / 1000) + 500
-	local gridY = math.floor(pos.y / 1000) + 500
-	local gridLetter = string.char(65 + (math.abs(gridY) % 26))
+	local dirToAttacker = (attackerPos - playerPos):Angle().y
+	local relativeAngle = math.NormalizeAngle(dirToAttacker - playerAng)
 	
-	return string.format("GRID %03d-%s", math.abs(gridX) % 1000, gridLetter)
-end
-
--- Cycle comms channel
-function NRCHUD.CycleCommsChannel()
-	local current = NRCHUD.PlayerData.commsChannel
-	local next = current + 1
-	
-	if next > #NRCHUD.Config.CommsChannels then
-		next = 1
+	local direction
+	if math.abs(relativeAngle) < 45 then
+		direction = "Top"
+	elseif math.abs(relativeAngle) > 135 then
+		direction = "Bottom"
+	elseif relativeAngle < 0 then
+		direction = "Left"
+	else
+		direction = "Right"
 	end
 	
-	NRCHUD.PlayerData.commsChannel = next
-	
-	-- Play sound
-	surface.PlaySound("buttons/button14.wav")
-	
-	-- Notify
-	local channelData = NRCHUD.Config.CommsChannels[next]
-	if channelData then
-		chat.AddText(Color(255, 255, 255), "[COMMS] Switched to channel: ", channelData.color, channelData.name)
-	end
-end
-
--- Bind comms key
-concommand.Add("nrc_comms_cycle", function()
-	NRCHUD.CycleCommsChannel()
-end)
-
--- Auto-bind B key on first load
-hook.Add("PlayerBindPress", "NRCHUD_CommsBinding", function(ply, bind, pressed)
-	if bind == "impulse 100" and pressed then -- B key
-		NRCHUD.CycleCommsChannel()
-		return true
-	end
+	NRCHUD.ShowDamageIndicator(direction)
 end)
 
 print("[NRC HUD] Client initialization complete!")

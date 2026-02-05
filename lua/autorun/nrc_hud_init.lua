@@ -8,6 +8,7 @@ if SERVER then
 	
 	-- Client files to send
 	AddCSLuaFile("nrc_hud/shared/sh_comms_config.lua")
+	AddCSLuaFile("nrc_hud/client/cl_init.lua")
 	AddCSLuaFile("nrc_hud/client/cl_hud.lua")
 	AddCSLuaFile("nrc_hud/client/cl_objectives.lua")
 	AddCSLuaFile("nrc_hud/client/cl_comms_menu.lua")
@@ -16,8 +17,9 @@ if SERVER then
 	
 	print("[NRC HUD] Server initialized!")
 else
-	-- Client files
+	-- Client files (in correct order)
 	include("nrc_hud/shared/sh_comms_config.lua")
+	include("nrc_hud/client/cl_init.lua") -- FIRST! Initializes PlayerData
 	include("nrc_hud/client/cl_hud.lua")
 	include("nrc_hud/client/cl_objectives.lua")
 	include("nrc_hud/client/cl_comms_menu.lua")
