@@ -32,40 +32,43 @@ local function DrawMinimap()
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
 	
-	local size = NRCHUD.Config.MinimapSize or 130
-	local x = ScrW() - 30 - size
-	local y = ScrH() - 30 - size
+	local size = NRCHUD.Config.MinimapSize or 150
+	-- Position: Bottom right, ABOVE weapon display
+	local x = ScrW() - 40 - size
+	local y = ScrH() - 200 - size
 	
 	-- Background circle
 	draw.NoTexture()
-	surface.SetDrawColor(0, 0, 0, 128)
+	surface.SetDrawColor(0, 0, 0, 160)
 	draw.Circle(x + size/2, y + size/2, size/2, 64)
 	
-	-- Border circle
-	surface.SetDrawColor(255, 255, 255, 76)
+	-- Border circle (thicker and more visible)
+	surface.SetDrawColor(255, 255, 255, 120)
 	draw.Circle(x + size/2, y + size/2, size/2, 64)
+	surface.SetDrawColor(255, 255, 255, 80)
+	draw.Circle(x + size/2, y + size/2, size/2 - 2, 64)
 	
 	-- Center crosshair
 	local cx, cy = x + size/2, y + size/2
-	surface.SetDrawColor(255, 255, 255, 26)
+	surface.SetDrawColor(255, 255, 255, 40)
 	surface.DrawLine(cx - size/2, cy, cx + size/2, cy)
 	surface.DrawLine(cx, cy - size/2, cx, cy + size/2)
 	
-	-- Player indicator (center)
+	-- Player indicator (center) - bigger triangle
 	draw.NoTexture()
 	surface.SetDrawColor(255, 255, 255, 255)
 	
-	-- Draw triangle pointing up
-	local triangleSize = 6
+	-- Draw triangle pointing up (larger)
+	local triangleSize = 8
 	local poly = {
 		{x = cx, y = cy - triangleSize},
-		{x = cx - triangleSize/2, y = cy + triangleSize/2},
-		{x = cx + triangleSize/2, y = cy + triangleSize/2}
+		{x = cx - triangleSize/1.5, y = cy + triangleSize/1.5},
+		{x = cx + triangleSize/1.5, y = cy + triangleSize/1.5}
 	}
 	surface.DrawPoly(poly)
 	
 	-- Draw other players (if available)
-	local scale = size / 2000 -- Adjust scale as needed
+	local scale = size / 2000
 	local playerPos = ply:GetPos()
 	
 	for _, playerData in ipairs(NRCHUD.Minimap.players) do
@@ -76,10 +79,10 @@ local function DrawMinimap()
 		
 		-- Check if dot is within circle
 		local dist = math.sqrt((dotX - cx)^2 + (dotY - cy)^2)
-		if dist < size/2 - 5 then
+		if dist < size/2 - 8 then
 			draw.NoTexture()
 			surface.SetDrawColor(dotColor.r, dotColor.g, dotColor.b, dotColor.a)
-			draw.Circle(dotX, dotY, 3, 16)
+			draw.Circle(dotX, dotY, 4, 16)
 		end
 	end
 end
