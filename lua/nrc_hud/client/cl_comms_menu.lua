@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Comms Menu (Clean, No Effects, Full Functionality)
+-- NRC Star Wars HUD - Comms Menu (Transparent Background)
 
 surface.CreateFont("NRC_Comms_Sci_Big", {font = "Orbitron", size = 24, weight = 700, antialias = true, extended = true})
 surface.CreateFont("NRC_Comms_Sci", {font = "Orbitron", size = 14, weight = 600, antialias = true, extended = true})
@@ -49,7 +49,7 @@ function NRCHUD.OpenCommsMenu()
 	waveTime = 0
 	currentChannel = NRCHUD.PlayerData.commsChannel or "Battalion Net"
 	
-	-- FULLSCREEN FRAME (dark bg, NO EFFECTS)
+	-- FULLSCREEN FRAME (TRANSPARENT - no background paint!)
 	local frame = vgui.Create("DFrame")
 	frame:SetSize(scrW, scrH)
 	frame:SetPos(0, 0)
@@ -57,12 +57,7 @@ function NRCHUD.OpenCommsMenu()
 	frame:SetDraggable(false)
 	frame:ShowCloseButton(false)
 	frame:MakePopup()
-	
-	frame.Paint = function(s, w, h)
-		-- Simple dark background ONLY
-		surface.SetDrawColor(5, 6, 11, 255)
-		surface.DrawRect(0, 0, w, h)
-	end
+	frame.Paint = nil -- NO BACKGROUND = transparent!
 	
 	NRCHUD.CommsMenu.Frame = frame
 	
@@ -76,7 +71,7 @@ function NRCHUD.OpenCommsMenu()
 	device:SetPos(deviceX, deviceY)
 	device:SetSize(deviceW, deviceH)
 	device.Paint = function(s, w, h)
-		-- Clean device background
+		-- Semi-transparent device background
 		draw.RoundedBox(22, 0, 0, w, h, Color(0, 0, 0, 46))
 		surface.SetDrawColor(120, 210, 255, 41)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
@@ -581,4 +576,4 @@ concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (Clean, Full Functionality) loaded!")
+print("[NRC HUD] Comms menu (Transparent Background) loaded!")
