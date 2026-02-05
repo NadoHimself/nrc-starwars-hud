@@ -1,51 +1,16 @@
--- NRC Star Wars HUD - Commander Menu (Client)
+-- NRC Star Wars HUD - Commander Menu (Cinematic Loading Screen Style)
 
-surface.CreateFont("NRC_CommanderTitle", {font = "Orbitron", size = 28, weight = 900})
-surface.CreateFont("NRC_CommanderHeader", {font = "Orbitron", size = 20, weight = 700})
-surface.CreateFont("NRC_CommanderSub", {font = "Rajdhani", size = 14, weight = 600})
-surface.CreateFont("NRC_CommanderText", {font = "Share Tech Mono", size = 13, weight = 400})
-surface.CreateFont("NRC_CommanderSmall", {font = "Orbitron", size = 12, weight = 600})
+-- Fonts
+surface.CreateFont("NRC_Commander_Title", {font = "Orbitron", size = 28, weight = 900, antialias = true})
+surface.CreateFont("NRC_Commander_Header", {font = "Orbitron", size = 20, weight = 700, antialias = true})
+surface.CreateFont("NRC_Commander_Small", {font = "Orbitron", size = 12, weight = 600, antialias = true})
+surface.CreateFont("NRC_Commander_Mono", {font = "Share Tech Mono", size = 13, weight = 400, antialias = true})
+surface.CreateFont("NRC_Commander_Mono_Small", {font = "Share Tech Mono", size = 10, weight = 400, antialias = true})
 
 NRCHUD.CommanderMenu = NRCHUD.CommanderMenu or {}
 
-function NRCHUD.GetAvailableRanks()
-	local ranks = {"all"}
-	
-	-- Check if MRS exists and is properly initialized
-	if MRS and type(MRS) == "table" then
-		-- Try MRS.GetRanks with pcall (safe call)
-		if MRS.GetRanks and type(MRS.GetRanks) == "function" then
-			local success, mrsRanks = pcall(MRS.GetRanks, MRS)
-			if success and mrsRanks and type(mrsRanks) == "table" then
-				for _, rank in ipairs(mrsRanks) do
-					if rank and type(rank) == "table" and rank.name then
-						table.insert(ranks, rank.name)
-					end
-				end
-				return ranks
-			end
-		end
-		
-		-- Try alternative MRS.Ranks table
-		if MRS.Ranks and type(MRS.Ranks) == "table" then
-			for _, rank in pairs(MRS.Ranks) do
-				if rank and type(rank) == "table" and rank.name then
-					table.insert(ranks, rank.name)
-				end
-			end
-			return ranks
-		end
-	end
-	
-	-- Fallback to default ranks if MRS not available
-	ranks = {
-		"all", "Trooper", "Corporal", "Sergeant",
-		"Lieutenant", "Captain", "Major",
-		"Commander", "Marshal Commander"
-	}
-	
-	return ranks
-end
+local grainOffsetX, grainOffsetY = 0, 0
+local scanlineOffset = 0
 
 function NRCHUD.OpenCommanderMenu()
 	if IsValid(NRCHUD.CommanderMenu.Frame) then
@@ -55,121 +20,152 @@ function NRCHUD.OpenCommanderMenu()
 	
 	local scrW, scrH = ScrW(), ScrH()
 	
-	-- Main Frame
+	-- Main Frame (fullscreen)
 	local frame = vgui.Create("DFrame")
-	frame:SetSize(math.min(1100, scrW * 0.9), math.min(700, scrH * 0.85))
-	frame:Center()
+	frame:SetSize(scrW, scrH)
+	frame:SetPos(0, 0)
 	frame:SetTitle("")
 	frame:SetDraggable(false)
 	frame:ShowCloseButton(false)
 	frame:MakePopup()
+	
 	frame.Paint = function(s, w, h)
-		-- Background
-		draw.RoundedBox(0, 0, 0, w, h, Color(5, 10, 15, 242))
-		
-		-- Border glow
-		surface.SetDrawColor(0, 150, 255, 102)
-		surface.DrawOutlinedRect(0, 0, w, h, 2)
-		
-		-- Inner glow
-		surface.SetDrawColor(0, 100, 180, 26)
-		for i = 1, 3 do
-			surface.DrawOutlinedRect(i * 2, i * 2, w - i * 4, h - i * 4, 1)
-		end
-		
-		-- Corner decorations
-		local cornerSize = 30
-		surface.SetDrawColor(0, 200, 255, 204)
-		-- Top left
-		surface.DrawLine(0, 0, cornerSize, 0)
-		surface.DrawLine(0, 0, 0, cornerSize)
-		-- Top right
-		surface.DrawLine(w - cornerSize, 0, w, 0)
-		surface.DrawLine(w - 1, 0, w - 1, cornerSize)
-		-- Bottom left
-		surface.DrawLine(0, h - cornerSize, 0, h)
-		surface.DrawLine(0, h - 1, cornerSize, h - 1)
-		-- Bottom right
-		surface.DrawLine(w - cornerSize, h - 1, w, h - 1)
-		surface.DrawLine(w - 1, h - cornerSize, w - 1, h)
+		-- Background (dark)
+		surface.SetDrawColor(5, 6, 11, 255)
+		surface.DrawRect(0, 0, w, h)
 		
 		-- Scanlines
-		surface.SetDrawColor(0, 100, 180, 8)
-		for i = 0, h, 4 do
-			surface.DrawLine(0, i, w, i)
+		scanlineOffset = (scanlineOffset + 0.3) % 7
+		surface.SetDrawColor(255, 255, 255, 8)
+		for i = 0, h, 7 do
+			local y = i + scanlineOffset
+			if y >= 0 and y <= h then
+				surface.DrawRect(0, y, w, 1)
+			end
+		end
+		
+		-- Grain
+		grainOffsetX = (grainOffsetX + 0.5) % 10
+		grainOffsetY = (grainOffsetY + 0.3) % 10
+		surface.SetDrawColor(255, 255, 255, 3)
+		for x = 0, w, 4 do
+			for y = 0, h, 4 do
+				if math.random() > 0.7 then
+					surface.DrawRect(x + grainOffsetX, y + grainOffsetY, 1, 1)
+				end
+			end
+		end
+		
+		-- Cinematic bars
+		local barHeight = h * 0.10
+		surface.SetDrawColor(0, 0, 0, 237)
+		surface.DrawRect(0, 0, w, barHeight)
+		surface.DrawRect(0, h - barHeight, w, barHeight)
+		
+		-- Light leaks
+		local leakAlpha = math.abs(math.sin(CurTime() * 0.3)) * 15 + 15
+		surface.SetDrawColor(255, 200, 120, leakAlpha)
+		for i = 1, 20 do
+			local x = w - (i * 30)
+			local alpha = math.max(0, leakAlpha - i * 1)
+			surface.SetDrawColor(255, 200, 120, alpha)
+			surface.DrawRect(x, 0, 30, h)
 		end
 	end
 	
 	NRCHUD.CommanderMenu.Frame = frame
 	
+	-- Content container
+	local contentY = scrH * 0.10 + 30
+	local contentH = scrH * 0.80 - 60
+	local contentW = math.min(1400, scrW * 0.9)
+	local contentX = (scrW - contentW) / 2
+	
+	local content = vgui.Create("DPanel", frame)
+	content:SetPos(contentX, contentY)
+	content:SetSize(contentW, contentH)
+	content.Paint = function(s, w, h)
+		surface.SetDrawColor(0, 0, 0, 66)
+		surface.DrawRect(0, 0, w, h)
+		
+		surface.SetDrawColor(120, 210, 255, 41)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		
+		surface.SetDrawColor(120, 210, 255, 26)
+		surface.DrawOutlinedRect(-1, -1, w + 2, h + 2, 2)
+		surface.DrawOutlinedRect(-2, -2, w + 4, h + 4, 1)
+	end
+	
 	-- Header
-	local header = vgui.Create("DPanel", frame)
+	local header = vgui.Create("DPanel", content)
 	header:SetPos(0, 0)
-	header:SetSize(frame:GetWide(), 100)
+	header:SetSize(content:GetWide(), 80)
 	header.Paint = function(s, w, h)
-		-- Gradient background
 		surface.SetDrawColor(0, 100, 180, 38)
 		surface.DrawRect(0, 0, w, h)
 		
-		-- Bottom border
-		surface.SetDrawColor(0, 150, 255, 77)
-		surface.DrawLine(0, h - 1, w, h - 1)
-		surface.DrawLine(0, h - 2, w, h - 2)
+		surface.SetDrawColor(120, 210, 255, 77)
+		surface.DrawRect(0, h - 2, w, 2)
+		
+		-- Accent line
+		local lineW = 58
+		for i = 1, lineW do
+			local alpha = (i / lineW) * 217
+			surface.SetDrawColor(120, 210, 255, alpha)
+			surface.DrawLine(i, h / 2, i, h / 2 + 1)
+		end
+		
+		draw.SimpleText(NRCHUD.GetText("commander_title"), "NRC_Commander_Title", 80, 20, Color(120, 210, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(NRCHUD.GetText("commander_subtitle"), "NRC_Commander_Mono_Small", 80, 50, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
-	-- Title
-	local title = vgui.Create("DLabel", header)
-	title:SetPos(40, 25)
-	title:SetText(NRCHUD.GetText("commander_title"))
-	title:SetFont("NRC_CommanderTitle")
-	title:SetTextColor(Color(0, 212, 255))
-	title:SizeToContents()
-	
-	-- Subtitle
-	local subtitle = vgui.Create("DLabel", header)
-	subtitle:SetPos(40, 58)
-	subtitle:SetText(NRCHUD.GetText("commander_subtitle"))
-	subtitle:SetFont("NRC_CommanderSub")
-	subtitle:SetTextColor(Color(235, 248, 255, 158))
-	subtitle:SizeToContents()
-	
-	-- Close Button
+	-- Close button
 	local closeBtn = vgui.Create("DButton", header)
-	closeBtn:SetPos(frame:GetWide() - 55, 15)
+	closeBtn:SetPos(header:GetWide() - 60, 20)
 	closeBtn:SetSize(40, 40)
 	closeBtn:SetText("×")
-	closeBtn:SetFont("NRC_CommanderHeader")
+	closeBtn:SetFont("NRC_Commander_Header")
 	closeBtn:SetTextColor(Color(239, 68, 68))
 	closeBtn.Paint = function(s, w, h)
 		if s:IsHovered() then
-			draw.RoundedBox(0, 0, 0, w, h, Color(239, 68, 68, 102))
+			surface.SetDrawColor(239, 68, 68, 102)
 		else
-			draw.RoundedBox(0, 0, 0, w, h, Color(239, 68, 68, 51))
+			surface.SetDrawColor(239, 68, 68, 51)
 		end
-		surface.SetDrawColor(239, 68, 68, 128)
+		surface.DrawRect(0, 0, w, h)
+		
+		surface.SetDrawColor(239, 68, 68, 179)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 	end
 	closeBtn.DoClick = function()
 		frame:Remove()
 	end
 	
-	-- Content placeholder
-	local content = vgui.Create("DPanel", frame)
-	content:SetPos(30, 120)
-	content:SetSize(frame:GetWide() - 60, frame:GetTall() - 150)
-	content.Paint = function(s, w, h)
-		draw.RoundedBox(0, 0, 0, w, h, Color(0, 30, 60, 102))
-		surface.SetDrawColor(0, 150, 255, 51)
+	-- Main content area
+	local mainContent = vgui.Create("DPanel", content)
+	mainContent:SetPos(30, 100)
+	mainContent:SetSize(content:GetWide() - 60, content:GetTall() - 120)
+	mainContent.Paint = function(s, w, h)
+		surface.SetDrawColor(0, 30, 60, 51)
+		surface.DrawRect(0, 0, w, h)
+		
+		surface.SetDrawColor(120, 210, 255, 51)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
-		draw.SimpleText(NRCHUD.GetText("current_objectives"), "NRC_CommanderHeader", 20, 20, Color(0, 212, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(NRCHUD.GetText("no_objectives"), "NRC_CommanderSub", 20, 60, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		-- Title
+		draw.SimpleText(NRCHUD.GetText("current_objectives"), "NRC_Commander_Header", 20, 20, Color(120, 210, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		
+		-- Placeholder text
+		draw.SimpleText(NRCHUD.GetText("no_objectives"), "NRC_Commander_Mono", 20, 60, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
+	
+	-- Fade in
+	frame:SetAlpha(0)
+	frame:AlphaTo(255, 0.3, 0)
 end
 
--- Keybind
 concommand.Add("nrc_commander", function()
 	NRCHUD.OpenCommanderMenu()
 end)
 
-print("[NRC HUD] Commander menu loaded!")
+print("[NRC HUD] Cinematic commander menu loaded!")
