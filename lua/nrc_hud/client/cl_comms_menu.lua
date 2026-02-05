@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Comms Menu (with Voice Integration)
+-- NRC Star Wars HUD - Comms Menu (with Voice Integration + Better Opacity)
 
 surface.CreateFont("NRC_Comms_Sci_Big", {font = "Orbitron", size = 24, weight = 700, antialias = true, extended = true})
 surface.CreateFont("NRC_Comms_Sci", {font = "Orbitron", size = 14, weight = 600, antialias = true, extended = true})
@@ -78,9 +78,10 @@ function NRCHUD.OpenCommsMenu()
 	device:SetPos(deviceX, deviceY)
 	device:SetSize(deviceW, deviceH)
 	device.Paint = function(s, w, h)
-		draw.RoundedBox(22, 0, 0, w, h, Color(0, 0, 0, 46))
-		surface.SetDrawColor(120, 210, 255, 41)
-		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		-- MUCH MORE OPAQUE background
+		draw.RoundedBox(22, 0, 0, w, h, Color(5, 8, 15, 235))
+		surface.SetDrawColor(120, 210, 255, 77)
+		surface.DrawOutlinedRect(0, 0, w, h, 2)
 	end
 	
 	NRCHUD.CommsMenu.Device = device
@@ -98,8 +99,8 @@ function NRCHUD.OpenCommsMenu()
 		end
 		
 		-- Brand text
-		draw.SimpleText("REPUBLIK • COMMS UPLINK", "NRC_Comms_Sci_Small", 62, 10, Color(235, 248, 255, 173), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText("PHASE II • SECURE TRANSCEIVER", "NRC_Comms_Mono_Tiny", 62, 27, Color(235, 248, 255, 140), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("REPUBLIK • COMMS UPLINK", "NRC_Comms_Sci_Small", 62, 10, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("PHASE II • SECURE TRANSCEIVER", "NRC_Comms_Mono_Tiny", 62, 27, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- Pills
 		local pillX = w - 10
@@ -107,31 +108,31 @@ function NRCHUD.OpenCommsMenu()
 		-- ENC
 		local encW = 72
 		local encX = pillX - encW
-		draw.RoundedBox(999, encX, h / 2 - 16, encW, 32, Color(0, 0, 0, 46))
-		surface.SetDrawColor(255, 195, 105, 41)
+		draw.RoundedBox(999, encX, h / 2 - 16, encW, 32, Color(10, 12, 20, 200))
+		surface.SetDrawColor(255, 195, 105, 77)
 		surface.DrawOutlinedRect(encX, h / 2 - 16, encW, 32, 1)
-		draw.SimpleText("ENC", "NRC_Comms_Mono_Tiny", encX + 10, h / 2 - 9, Color(235, 248, 255, 140), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(encryption and "AN" or "AUS", "NRC_Comms_Mono_Tiny", encX + 36, h / 2 - 9, Color(235, 248, 255, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("ENC", "NRC_Comms_Mono_Tiny", encX + 10, h / 2 - 9, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(encryption and "AN" or "AUS", "NRC_Comms_Mono_Tiny", encX + 36, h / 2 - 9, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- BAT
 		local batW = 72
 		local batX = encX - batW - 8
-		draw.RoundedBox(999, batX, h / 2 - 16, batW, 32, Color(0, 0, 0, 46))
-		surface.SetDrawColor(120, 210, 255, 41)
+		draw.RoundedBox(999, batX, h / 2 - 16, batW, 32, Color(10, 12, 20, 200))
+		surface.SetDrawColor(120, 210, 255, 77)
 		surface.DrawOutlinedRect(batX, h / 2 - 16, batW, 32, 1)
 		local bat = math.floor(58 + math.random() * 35)
-		draw.SimpleText("BAT", "NRC_Comms_Mono_Tiny", batX + 10, h / 2 - 9, Color(235, 248, 255, 140), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(bat .. "%", "NRC_Comms_Mono_Tiny", batX + 36, h / 2 - 9, Color(235, 248, 255, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("BAT", "NRC_Comms_Mono_Tiny", batX + 10, h / 2 - 9, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(bat .. "%", "NRC_Comms_Mono_Tiny", batX + 36, h / 2 - 9, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- SIG
 		local sigW = 72
 		local sigX = batX - sigW - 8
-		draw.RoundedBox(999, sigX, h / 2 - 16, sigW, 32, Color(0, 0, 0, 46))
-		surface.SetDrawColor(120, 210, 255, 41)
+		draw.RoundedBox(999, sigX, h / 2 - 16, sigW, 32, Color(10, 12, 20, 200))
+		surface.SetDrawColor(120, 210, 255, 77)
 		surface.DrawOutlinedRect(sigX, h / 2 - 16, sigW, 32, 1)
 		local sig = math.floor(62 + math.random() * 34)
-		draw.SimpleText("SIG", "NRC_Comms_Mono_Tiny", sigX + 10, h / 2 - 9, Color(235, 248, 255, 140), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(sig .. "%", "NRC_Comms_Mono_Tiny", sigX + 36, h / 2 - 9, Color(235, 248, 255, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("SIG", "NRC_Comms_Mono_Tiny", sigX + 10, h / 2 - 9, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(sig .. "%", "NRC_Comms_Mono_Tiny", sigX + 36, h / 2 - 9, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	-- SCREEN (3 columns)
@@ -148,11 +149,11 @@ function NRCHUD.OpenCommsMenu()
 	leftPanel:SetPos(16, screenY)
 	leftPanel:SetSize(col1W, screenH)
 	leftPanel.Paint = function(s, w, h)
-		draw.RoundedBox(18, 0, 0, w, h, Color(0, 0, 0, 61))
-		surface.SetDrawColor(120, 210, 255, 36)
+		draw.RoundedBox(18, 0, 0, w, h, Color(8, 10, 18, 220))
+		surface.SetDrawColor(120, 210, 255, 61)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
-		draw.SimpleText("KANÄLE", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 163), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("KANÄLE", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	-- Channel buttons
@@ -172,25 +173,25 @@ function NRCHUD.OpenCommsMenu()
 		btn.Paint = function(s, w, h)
 			local isActive = (currentChannel == chan.name)
 			
-			draw.RoundedBox(14, 0, 0, w, h, Color(0, 0, 0, 41))
+			draw.RoundedBox(14, 0, 0, w, h, Color(5, 7, 12, 200))
 			
 			if isActive then
-				surface.SetDrawColor(255, 195, 105, 51)
+				surface.SetDrawColor(255, 195, 105, 102)
 			else
-				surface.SetDrawColor(120, 210, 255, chan.danger and 36 or 31)
+				surface.SetDrawColor(120, 210, 255, chan.danger and 61 or 51)
 			end
 			surface.DrawOutlinedRect(0, 0, w, h, 1)
 			
 			if s:IsHovered() then
-				surface.SetDrawColor(120, 210, 255, 77)
+				surface.SetDrawColor(120, 210, 255, 128)
 				surface.DrawOutlinedRect(0, 0, w, h, 2)
 			end
 			
-			draw.SimpleText(chan.name, "NRC_Comms_Sci_Small", 10, 12, Color(235, 248, 255, 209), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(chan.desc, "NRC_Comms_Mono_Tiny", 10, 32, Color(235, 248, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(chan.name, "NRC_Comms_Sci_Small", 10, 12, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(chan.desc, "NRC_Comms_Mono_Tiny", 10, 32, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			
 			if isActive then
-				draw.SimpleText("✓ AKTIV", "NRC_Comms_Mono_Tiny", 10, 52, Color(255, 195, 105, 230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				draw.SimpleText("✓ AKTIV", "NRC_Comms_Mono_Tiny", 10, 52, Color(255, 195, 105, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			end
 		end
 		
@@ -206,10 +207,10 @@ function NRCHUD.OpenCommsMenu()
 					net.WriteString(chan.name)
 				net.SendToServer()
 				
-				AddLogLine("[CH] Kanal gewechselt: " .. chan.name, Color(120, 210, 255, 230))
+				AddLogLine("[CH] Kanal gewechselt: " .. chan.name, Color(120, 210, 255, 255))
 				
 				if chan.danger then
-					AddLogLine("[PRIO] Notfallkanal aktiv.", Color(255, 195, 105, 230))
+					AddLogLine("[PRIO] Notfallkanal aktiv.", Color(255, 195, 105, 255))
 				end
 				
 				surface.PlaySound("buttons/lightswitch2.wav")
@@ -225,7 +226,7 @@ function NRCHUD.OpenCommsMenu()
 	infoPanel.Paint = function(s, w, h)
 		-- Divider
 		for i = 0, w - 24 do
-			local alpha = math.sin((i / (w - 24)) * math.pi) * 56
+			local alpha = math.sin((i / (w - 24)) * math.pi) * 87
 			surface.SetDrawColor(120, 210, 255, alpha)
 			surface.DrawLine(12 + i, 12, 12 + i, 12)
 		end
@@ -241,8 +242,8 @@ function NRCHUD.OpenCommsMenu()
 		
 		for i, meta in ipairs(metas) do
 			local my = 24 + (i - 1) * 24
-			draw.SimpleText(meta.k, "NRC_Comms_Mono_Tiny", 12, my, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			draw.SimpleText(meta.v, "NRC_Comms_Mono_Tiny", w - 12, my, Color(235, 248, 255, 214), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+			draw.SimpleText(meta.k, "NRC_Comms_Mono_Tiny", 12, my, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(meta.v, "NRC_Comms_Mono_Tiny", w - 12, my, Color(235, 248, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 		end
 	end
 	
@@ -251,12 +252,12 @@ function NRCHUD.OpenCommsMenu()
 	corePanel:SetPos(16 + col1W + 12, screenY)
 	corePanel:SetSize(col2W, screenH)
 	corePanel.Paint = function(s, w, h)
-		draw.RoundedBox(18, 0, 0, w, h, Color(0, 0, 0, 61))
-		surface.SetDrawColor(120, 210, 255, 36)
+		draw.RoundedBox(18, 0, 0, w, h, Color(8, 10, 18, 220))
+		surface.SetDrawColor(120, 210, 255, 61)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
 		-- Title
-		draw.SimpleText("TRANSMISSION", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 163), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("TRANSMISSION", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- Voice status
 		local voiceStatus = "STANDBY"
@@ -266,19 +267,19 @@ function NRCHUD.OpenCommsMenu()
 			voiceStatus = "MUTED"
 		end
 		
-		local statusColor = NRCHUD.Voice.Muted and Color(255, 100, 100, 209) or Color(255, 195, 105, 209)
+		local statusColor = NRCHUD.Voice.Muted and Color(255, 100, 100, 255) or Color(255, 195, 105, 255)
 		draw.SimpleText(voiceStatus, "NRC_Comms_Sci_Small", w - 12, 12, statusColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 		
 		-- Waveform
 		local waveX, waveY = 12, 40
 		local waveW, waveH = w - 24, 210
 		
-		draw.RoundedBox(16, waveX, waveY, waveW, waveH, Color(0, 0, 0, 46))
-		surface.SetDrawColor(120, 210, 255, 31)
+		draw.RoundedBox(16, waveX, waveY, waveW, waveH, Color(3, 5, 10, 200))
+		surface.SetDrawColor(120, 210, 255, 51)
 		surface.DrawOutlinedRect(waveX, waveY, waveW, waveH, 1)
 		
 		-- Grid
-		surface.SetDrawColor(120, 210, 255, 46)
+		surface.SetDrawColor(120, 210, 255, 77)
 		for gx = waveX, waveX + waveW, 42 do
 			surface.DrawLine(gx, waveY, gx, waveY + waveH)
 		end
@@ -293,7 +294,7 @@ function NRCHUD.OpenCommsMenu()
 		local noise = isSpeaking and 0.85 or 0.45
 		local mid = waveY + waveH / 2
 		
-		surface.SetDrawColor(isSpeaking and 255 or 120, isSpeaking and 195 or 210, isSpeaking and 105 or 255, 217)
+		surface.SetDrawColor(isSpeaking and 255 or 120, isSpeaking and 195 or 210, isSpeaking and 105 or 255, 255)
 		
 		local lastX, lastY = waveX, mid
 		for wx = waveX, waveX + waveW, 2 do
@@ -307,12 +308,12 @@ function NRCHUD.OpenCommsMenu()
 		end
 		
 		-- Wave label
-		draw.SimpleText("CHANNEL:", "NRC_Comms_Mono_Tiny", waveX + 14, waveY + waveH - 20, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(currentChannel, "NRC_Comms_Mono_Tiny", waveX + 90, waveY + waveH - 20, Color(235, 248, 255, 219), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("CHANNEL:", "NRC_Comms_Mono_Tiny", waveX + 14, waveY + waveH - 20, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(currentChannel, "NRC_Comms_Mono_Tiny", waveX + 90, waveY + waveH - 20, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- Dot
 		local dotX = waveX + 250
-		surface.SetDrawColor(255, 195, 105, 217)
+		surface.SetDrawColor(255, 195, 105, 255)
 		draw.NoTexture()
 		local dot = {}
 		for j = 0, 360, 30 do
@@ -321,8 +322,8 @@ function NRCHUD.OpenCommsMenu()
 		end
 		surface.DrawPoly(dot)
 		
-		draw.SimpleText("ENCRYPTION:", "NRC_Comms_Mono_Tiny", dotX + 12, waveY + waveH - 20, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(encryption and "AN" or "AUS", "NRC_Comms_Mono_Tiny", dotX + 105, waveY + waveH - 20, Color(235, 248, 255, 219), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("ENCRYPTION:", "NRC_Comms_Mono_Tiny", dotX + 12, waveY + waveH - 20, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(encryption and "AN" or "AUS", "NRC_Comms_Mono_Tiny", dotX + 105, waveY + waveH - 20, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	-- Control buttons
@@ -345,43 +346,43 @@ function NRCHUD.OpenCommsMenu()
 		btn.Paint = function(s, w, h)
 			local isActive = (btnData.action == "ptt" and pttActive) or (btnData.action == "mute" and NRCHUD.Voice.Muted)
 			
-			draw.RoundedBox(16, 0, 0, w, h, Color(0, 0, 0, 46))
+			draw.RoundedBox(16, 0, 0, w, h, Color(5, 7, 12, 200))
 			
 			if btnData.action == "ptt" or (btnData.action == "mute" and NRCHUD.Voice.Muted) then
-				surface.SetDrawColor(255, 195, 105, isActive and 77 or 46)
+				surface.SetDrawColor(255, 195, 105, isActive and 128 or 77)
 			else
-				surface.SetDrawColor(120, 210, 255, 36)
+				surface.SetDrawColor(120, 210, 255, 61)
 			end
 			surface.DrawOutlinedRect(0, 0, w, h, 1)
 			
 			if s:IsHovered() then
-				surface.SetDrawColor(120, 210, 255, 77)
+				surface.SetDrawColor(120, 210, 255, 128)
 				surface.DrawOutlinedRect(0, 0, w, h, 2)
 			end
 			
 			-- Icon for MUTE button
 			if btnData.action == "mute" then
-				NRCHUD.Voice.DrawIcon(w / 2 - 10, 8, 20, NRCHUD.Voice.Muted, Color(120, 210, 255, 224))
+				NRCHUD.Voice.DrawIcon(w / 2 - 10, 8, 20, NRCHUD.Voice.Muted, Color(120, 210, 255, 255))
 			else
-				draw.SimpleText(btnData.label, "NRC_Comms_Sci_Small", 10, 12, Color(120, 210, 255, 224), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+				draw.SimpleText(btnData.label, "NRC_Comms_Sci_Small", 10, 12, Color(120, 210, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			end
 			
-			draw.SimpleText(btnData.sub, "NRC_Comms_Mono_Tiny", 10, 32, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			draw.SimpleText(btnData.sub, "NRC_Comms_Mono_Tiny", 10, 32, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		end
 		
 		if btnData.action == "enc" then
 			btn.DoClick = function()
 				encryption = not encryption
-				AddLogLine(encryption and "[ENC] Verschlüsselung: AN" or "[ENC] Verschlüsselung: AUS", encryption and Color(120, 210, 255, 230) or Color(255, 195, 105, 230))
+				AddLogLine(encryption and "[ENC] Verschlüsselung: AN" or "[ENC] Verschlüsselung: AUS", encryption and Color(120, 210, 255, 255) or Color(255, 195, 105, 255))
 				surface.PlaySound("buttons/button15.wav")
 			end
 		elseif btnData.action == "ping" then
 			btn.DoClick = function()
-				AddLogLine("[PING] Sende Signaltest…", Color(120, 210, 255, 230))
+				AddLogLine("[PING] Sende Signaltest…", Color(120, 210, 255, 255))
 				timer.Simple(0.4, function()
 					if IsValid(frame) then
 						local ms = math.floor(24 + math.random() * 8)
-						AddLogLine("[PING] Antwort erhalten • " .. ms .. " ms", Color(120, 210, 255, 230))
+						AddLogLine("[PING] Antwort erhalten • " .. ms .. " ms", Color(120, 210, 255, 255))
 					end
 				end)
 				surface.PlaySound("buttons/button14.wav")
@@ -389,27 +390,27 @@ function NRCHUD.OpenCommsMenu()
 		elseif btnData.action == "mute" then
 			btn.DoClick = function()
 				NRCHUD.Voice.ToggleMute()
-				AddLogLine(NRCHUD.Voice.Muted and "[MUTE] Mikrofon stumm" or "[MUTE] Mikrofon aktiv", NRCHUD.Voice.Muted and Color(255, 100, 100, 230) or Color(90, 255, 190, 230))
+				AddLogLine(NRCHUD.Voice.Muted and "[MUTE] Mikrofon stumm" or "[MUTE] Mikrofon aktiv", NRCHUD.Voice.Muted and Color(255, 100, 100, 255) or Color(90, 255, 190, 255))
 			end
 		elseif btnData.action == "ptt" then
 			btn.OnMousePressed = function(s, code)
 				if code == MOUSE_LEFT then
 					pttActive = true
-					AddLogLine("[TX] Übertragung gestartet…", Color(255, 195, 105, 230))
+					AddLogLine("[TX] Übertragung gestartet…", Color(255, 195, 105, 255))
 				end
 			end
 			
 			btn.OnMouseReleased = function(s, code)
 				if code == MOUSE_LEFT and pttActive then
 					pttActive = false
-					AddLogLine("[TX] Übertragung beendet.", Color(120, 210, 255, 230))
+					AddLogLine("[TX] Übertragung beendet.", Color(120, 210, 255, 255))
 				end
 			end
 			
 			btn.OnCursorExited = function(s)
 				if pttActive then
 					pttActive = false
-					AddLogLine("[TX] Übertragung beendet.", Color(120, 210, 255, 230))
+					AddLogLine("[TX] Übertragung beendet.", Color(120, 210, 255, 255))
 				end
 			end
 		end
@@ -428,7 +429,7 @@ function NRCHUD.OpenCommsMenu()
 		else
 			hint = "Nutze Push-to-Talk (V) oder MUTE Button."
 		end
-		draw.SimpleText(hint, "NRC_Comms_Mono_Tiny", 0, 0, Color(235, 248, 255, 143), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(hint, "NRC_Comms_Mono_Tiny", 0, 0, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	-- RIGHT: Log
@@ -436,11 +437,11 @@ function NRCHUD.OpenCommsMenu()
 	logPanel:SetPos(16 + col1W + 12 + col2W + 12, screenY)
 	logPanel:SetSize(col3W, screenH)
 	logPanel.Paint = function(s, w, h)
-		draw.RoundedBox(18, 0, 0, w, h, Color(0, 0, 0, 61))
-		surface.SetDrawColor(120, 210, 255, 36)
+		draw.RoundedBox(18, 0, 0, w, h, Color(8, 10, 18, 220))
+		surface.SetDrawColor(120, 210, 255, 61)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
-		draw.SimpleText("LOG", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 163), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("LOG", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- Log lines
 		local logY = 40
@@ -453,7 +454,7 @@ function NRCHUD.OpenCommsMenu()
 		-- Divider
 		local divY = h - 120
 		for i = 0, w - 24 do
-			local alpha = math.sin((i / (w - 24)) * math.pi) * 56
+			local alpha = math.sin((i / (w - 24)) * math.pi) * 87
 			surface.SetDrawColor(120, 210, 255, alpha)
 			surface.DrawLine(12 + i, divY, 12 + i, divY)
 		end
@@ -463,20 +464,20 @@ function NRCHUD.OpenCommsMenu()
 		local miniW = (w - 24 - 10) / 2
 		
 		-- UPLINK
-		draw.RoundedBox(14, 12, miniY, miniW, 55, Color(0, 0, 0, 36))
-		surface.SetDrawColor(120, 210, 255, 26)
+		draw.RoundedBox(14, 12, miniY, miniW, 55, Color(5, 7, 12, 180))
+		surface.SetDrawColor(120, 210, 255, 51)
 		surface.DrawOutlinedRect(12, miniY, miniW, 55, 1)
-		draw.SimpleText("UPLINK", "NRC_Comms_Mono_Tiny", 22, miniY + 12, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText("STABIL", "NRC_Comms_Mono_Tiny", 22, miniY + 32, Color(90, 255, 190, 224), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("UPLINK", "NRC_Comms_Mono_Tiny", 22, miniY + 12, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("STABIL", "NRC_Comms_Mono_Tiny", 22, miniY + 32, Color(90, 255, 190, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
 		-- LATENZ
 		local latX = 12 + miniW + 10
-		draw.RoundedBox(14, latX, miniY, miniW, 55, Color(0, 0, 0, 36))
-		surface.SetDrawColor(120, 210, 255, 26)
+		draw.RoundedBox(14, latX, miniY, miniW, 55, Color(5, 7, 12, 180))
+		surface.SetDrawColor(120, 210, 255, 51)
 		surface.DrawOutlinedRect(latX, miniY, miniW, 55, 1)
-		draw.SimpleText("LATENZ", "NRC_Comms_Mono_Tiny", latX + 10, miniY + 12, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText("LATENZ", "NRC_Comms_Mono_Tiny", latX + 10, miniY + 12, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		local lat = math.floor(24 + math.random() * 8)
-		draw.SimpleText(lat .. " ms", "NRC_Comms_Mono_Tiny", latX + 10, miniY + 32, Color(235, 248, 255, 209), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(lat .. " ms", "NRC_Comms_Mono_Tiny", latX + 10, miniY + 32, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	-- FOOTER
@@ -493,18 +494,18 @@ function NRCHUD.OpenCommsMenu()
 			local tw = surface.GetTextSize(chip)
 			local chipW = tw + 20
 			
-			draw.RoundedBox(999, chipX, h / 2 - 16, chipW, 32, Color(0, 0, 0, 46))
-			surface.SetDrawColor(isActive and 255 or 120, isActive and 195 or 210, isActive and 105 or 255, isActive and 51 or 36)
+			draw.RoundedBox(999, chipX, h / 2 - 16, chipW, 32, Color(10, 12, 20, 200))
+			surface.SetDrawColor(isActive and 255 or 120, isActive and 195 or 210, isActive and 105 or 255, isActive and 102 or 61)
 			surface.DrawOutlinedRect(chipX, h / 2 - 16, chipW, 32, 1)
 			
-			draw.SimpleText(chip, "NRC_Comms_Mono_Tiny", chipX + chipW / 2, h / 2, isActive and Color(255, 195, 105, 230) or Color(235, 248, 255, 158), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+			draw.SimpleText(chip, "NRC_Comms_Mono_Tiny", chipX + chipW / 2, h / 2, isActive and Color(255, 195, 105, 255) or Color(235, 248, 255, 217), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			
 			chipX = chipX + chipW + 10
 		end
 		
 		-- Time
 		local time = os.date("LOCAL %H:%M • ENCRYPTION ACTIVE")
-		draw.SimpleText(time, "NRC_Comms_Mono_Tiny", w, h / 2, Color(235, 248, 255, 148), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+		draw.SimpleText(time, "NRC_Comms_Mono_Tiny", w, h / 2, Color(235, 248, 255, 217), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 	end
 	
 	-- BOOT OVERLAY
@@ -518,12 +519,12 @@ function NRCHUD.OpenCommsMenu()
 		end
 		
 		-- Overlay
-		draw.RoundedBox(16, 0, 0, w, h, Color(0, 0, 0, 140))
-		surface.SetDrawColor(120, 210, 255, 36)
-		surface.DrawOutlinedRect(0, 0, w, h, 1)
+		draw.RoundedBox(16, 0, 0, w, h, Color(5, 8, 15, 235))
+		surface.SetDrawColor(120, 210, 255, 77)
+		surface.DrawOutlinedRect(0, 0, w, h, 2)
 		
 		-- Title
-		draw.SimpleText("HANDSHAKE", "NRC_Comms_Sci", w / 2, h / 2 - 50, Color(120, 210, 255, 217), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+		draw.SimpleText("HANDSHAKE", "NRC_Comms_Sci", w / 2, h / 2 - 50, Color(120, 210, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 		
 		local bootSteps = {
 			{sub = "Initialisiere Transceiver…", hint = "Kalibriere Frequenzen…"},
@@ -535,7 +536,7 @@ function NRCHUD.OpenCommsMenu()
 		
 		if bootStage <= #bootSteps then
 			local step = bootSteps[bootStage]
-			draw.SimpleText(step.sub, "NRC_Comms_Mono", w / 2, h / 2 - 20, Color(235, 248, 255, 184), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+			draw.SimpleText(step.sub, "NRC_Comms_Mono", w / 2, h / 2 - 20, Color(235, 248, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 		end
 		
 		-- Progress bar
@@ -543,23 +544,23 @@ function NRCHUD.OpenCommsMenu()
 		local barX = (w - barW) / 2
 		local barY = h / 2 + 10
 		
-		draw.RoundedBox(999, barX, barY, barW, 12, Color(0, 0, 0, 56))
-		surface.SetDrawColor(120, 210, 255, 41)
+		draw.RoundedBox(999, barX, barY, barW, 12, Color(10, 12, 20, 180))
+		surface.SetDrawColor(120, 210, 255, 77)
 		surface.DrawOutlinedRect(barX, barY, barW, 12, 1)
 		
 		local fillW = (bootProgress / 100) * barW
-		draw.RoundedBox(999, barX, barY, fillW, 12, Color(120, 210, 255, 140))
+		draw.RoundedBox(999, barX, barY, fillW, 12, Color(120, 210, 255, 200))
 		
 		if bootStage <= #bootSteps then
 			local step = bootSteps[bootStage]
-			draw.SimpleText(step.hint, "NRC_Comms_Mono_Tiny", w / 2, barY + 25, Color(235, 248, 255, 148), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+			draw.SimpleText(step.hint, "NRC_Comms_Mono_Tiny", w / 2, barY + 25, Color(235, 248, 255, 217), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 		end
 	end
 	
 	-- BOOT SEQUENCE
 	timer.Simple(0.1, function()
 		if IsValid(frame) then
-			AddLogLine("[BOOT] Transceiver wird gestartet…", Color(120, 210, 255, 230))
+			AddLogLine("[BOOT] Transceiver wird gestartet…", Color(120, 210, 255, 255))
 		end
 	end)
 	
@@ -581,7 +582,7 @@ function NRCHUD.OpenCommsMenu()
 					bootOverlay:SetVisible(false)
 				end
 				if IsValid(frame) then
-					AddLogLine("[OK] Uplink steht. Standby.", Color(120, 210, 255, 230))
+					AddLogLine("[OK] Uplink steht. Standby.", Color(120, 210, 255, 255))
 				end
 			end)
 			return
@@ -641,4 +642,4 @@ concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (with Voice Integration) loaded!")
+print("[NRC HUD] Comms menu (Better Opacity) loaded!")
