@@ -72,61 +72,68 @@ local function DrawObjective()
 	local objective = NRCHUD.GetCurrentObjective()
 	if not objective then return end
 	
-	local x, y = 30, 25
+	local x, y = 30, 30
 	
 	-- Pulsing indicator
 	local pulse = math.abs(math.sin(CurTime() * 2))
 	local indicatorAlpha = 128 + pulse * 127
 	
-	draw.SimpleText("●", "NRCHUD_Objective_Label", x, y + 3, Color(255, 255, 255, indicatorAlpha), TEXT_ALIGN_LEFT)
+	draw.SimpleText("●", "NRCHUD_Objective_Label", x, y + 5, Color(255, 255, 255, indicatorAlpha), TEXT_ALIGN_LEFT)
 	
 	-- Label
-	draw.SimpleText("OBJECTIVE", "NRCHUD_Objective_Label", x + 16, y, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT)
+	draw.SimpleText("OBJECTIVE", "NRCHUD_Objective_Label", x + 20, y, Color(255, 255, 255, 200), TEXT_ALIGN_LEFT)
 	
 	-- Objective text
-	draw.SimpleText(objective.text, "NRCHUD_Objective_Text", x, y + 20, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
+	draw.SimpleText(objective.text, "NRCHUD_Objective_Text", x, y + 26, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
 	
 	-- Priority indicator
 	if objective.priority > 1 then
 		local priorityText = string.rep("!", math.min(objective.priority, 3))
-		draw.SimpleText(priorityText, "NRCHUD_Objective_Text", x + 8, y + 40, Color(239, 68, 68, 255), TEXT_ALIGN_LEFT)
+		draw.SimpleText(priorityText, "NRCHUD_Objective_Text", x + 10, y + 50, Color(239, 68, 68, 255), TEXT_ALIGN_LEFT)
 	end
 end
 
--- Draw comms display
+-- Draw comms display (UPDATED for new system)
 local function DrawComms()
 	if not NRCHUD.Config.ShowComms then return end
 	
-	local x, y = ScrW() - 30, 25
+	local x, y = ScrW() - 40, 30
 	
-	local channel = NRCHUD.PlayerData.commsChannel
-	local channelData = NRCHUD.Config.CommsChannels[channel]
+	-- Get current channel
+	local channelName = NRCHUD.CurrentChannel or NRCHUD.PlayerData.commsChannel or "Battalion Net"
+	local channelData = NRCHUD.CommsFrequencies[channelName]
 	
-	if not channelData then return end
+	if not channelData then
+		channelData = {freq = "445.750 MHz", color = Color(76, 222, 128)}
+	end
 	
 	-- Channel indicator (blinking)
 	local blink = math.abs(math.sin(CurTime() * 1.5))
 	local indicatorAlpha = 128 + blink * 127
 	
-	draw.SimpleText("●", "NRCHUD_Comms_Value", x - 8, y + 3, Color(channelData.color.r, channelData.color.g, channelData.color.b, indicatorAlpha), TEXT_ALIGN_RIGHT)
+	draw.SimpleText("●", "NRCHUD_Comms_Value", x - 12, y + 5, Color(channelData.color.r, channelData.color.g, channelData.color.b, indicatorAlpha), TEXT_ALIGN_RIGHT)
 	
-	-- Channel name
-	draw.SimpleText(channelData.name:upper(), "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
-	draw.SimpleText("COMMS CHANNEL", "NRCHUD_Comms_Label", x, y + 18, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT)
+	-- Channel name (larger)
+	draw.SimpleText(channelName:upper(), "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
+	draw.SimpleText("COMMS CHANNEL", "NRCHUD_Comms_Label", x, y + 24, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	
-	-- Frequency
-	draw.SimpleText(NRCHUD.PlayerData.frequency, "NRCHUD_Comms_Value", x, y + 40, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
-	draw.SimpleText("FREQUENCY", "NRCHUD_Comms_Label", x, y + 58, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT)
+	-- Frequency (larger)
+	local freq = NRCHUD.PlayerData.frequency or channelData.freq
+	draw.SimpleText(freq, "NRCHUD_Comms_Value", x, y + 50, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
+	draw.SimpleText("FREQUENCY", "NRCHUD_Comms_Label", x, y + 74, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	
 	-- Grid location
 	local gridLoc = NRCHUD.GetGridLocation()
-	draw.SimpleText(gridLoc, "NRCHUD_Comms_Value", x, y + 80, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
-	draw.SimpleText("LOCATION", "NRCHUD_Comms_Label", x, y + 98, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT)
+	draw.SimpleText(gridLoc, "NRCHUD_Comms_Value", x, y + 100, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
+	draw.SimpleText("LOCATION", "NRCHUD_Comms_Label", x, y + 124, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	
 	-- Time
 	local timeText = os.date("%H:%M")
-	draw.SimpleText(timeText, "NRCHUD_Comms_Value", x, y + 120, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
-	draw.SimpleText("TIME", "NRCHUD_Comms_Label", x, y + 138, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT)
+	draw.SimpleText(timeText, "NRCHUD_Comms_Value", x, y + 150, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
+	draw.SimpleText("TIME", "NRCHUD_Comms_Label", x, y + 174, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
+	
+	-- F6 hint
+	draw.SimpleText("[F6] COMMS MENU", "NRCHUD_Comms_Label", x, y + 205, Color(76, 222, 128, 150), TEXT_ALIGN_RIGHT)
 end
 
 -- Add to HUD paint
