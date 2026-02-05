@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Comms Menu (Transparent Background)
+-- NRC Star Wars HUD - Comms Menu (Production Ready)
 
 surface.CreateFont("NRC_Comms_Sci_Big", {font = "Orbitron", size = 24, weight = 700, antialias = true, extended = true})
 surface.CreateFont("NRC_Comms_Sci", {font = "Orbitron", size = 14, weight = 600, antialias = true, extended = true})
@@ -9,6 +9,7 @@ surface.CreateFont("NRC_Comms_Mono_Tiny", {font = "Share Tech Mono", size = 12, 
 
 NRCHUD.CommsMenu = NRCHUD.CommsMenu or {}
 NRCHUD.ChannelUserCounts = NRCHUD.ChannelUserCounts or {}
+NRCHUD.PlayerData = NRCHUD.PlayerData or {}
 
 local waveTime = 0
 local bootProgress = 0
@@ -47,9 +48,9 @@ function NRCHUD.OpenCommsMenu()
 	showingBoot = true
 	logLines = {}
 	waveTime = 0
-	currentChannel = NRCHUD.PlayerData.commsChannel or "Battalion Net"
+	currentChannel = (NRCHUD.PlayerData and NRCHUD.PlayerData.commsChannel) or "Battalion Net"
 	
-	-- FULLSCREEN FRAME (TRANSPARENT - no background paint!)
+	-- FULLSCREEN FRAME (TRANSPARENT)
 	local frame = vgui.Create("DFrame")
 	frame:SetSize(scrW, scrH)
 	frame:SetPos(0, 0)
@@ -57,7 +58,13 @@ function NRCHUD.OpenCommsMenu()
 	frame:SetDraggable(false)
 	frame:ShowCloseButton(false)
 	frame:MakePopup()
-	frame.Paint = nil -- NO BACKGROUND = transparent!
+	frame.Paint = nil
+	
+	-- Cleanup on close
+	frame.OnRemove = function()
+		timer.Remove("NRCHUD_CommsBootSequence")
+		pttActive = false
+	end
 	
 	NRCHUD.CommsMenu.Frame = frame
 	
@@ -71,7 +78,6 @@ function NRCHUD.OpenCommsMenu()
 	device:SetPos(deviceX, deviceY)
 	device:SetSize(deviceW, deviceH)
 	device.Paint = function(s, w, h)
-		-- Semi-transparent device background
 		draw.RoundedBox(22, 0, 0, w, h, Color(0, 0, 0, 46))
 		surface.SetDrawColor(120, 210, 255, 41)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
@@ -191,7 +197,9 @@ function NRCHUD.OpenCommsMenu()
 		btn.DoClick = function()
 			if currentChannel ~= chan.name then
 				currentChannel = chan.name
-				NRCHUD.PlayerData.commsChannel = chan.name
+				if NRCHUD.PlayerData then
+					NRCHUD.PlayerData.commsChannel = chan.name
+				end
 				
 				-- Network
 				net.Start("NRCHUD_SwitchChannel")
@@ -353,8 +361,10 @@ function NRCHUD.OpenCommsMenu()
 			btn.DoClick = function()
 				AddLogLine("[PING] Sende Signaltest…", Color(120, 210, 255, 230))
 				timer.Simple(0.4, function()
-					local ms = math.floor(24 + math.random() * 8)
-					AddLogLine("[PING] Antwort erhalten • " .. ms .. " ms", Color(120, 210, 255, 230))
+					if IsValid(frame) then
+						local ms = math.floor(24 + math.random() * 8)
+						AddLogLine("[PING] Antwort erhalten • " .. ms .. " ms", Color(120, 210, 255, 230))
+					end
 				end)
 				surface.PlaySound("buttons/button14.wav")
 			end
@@ -367,7 +377,15 @@ function NRCHUD.OpenCommsMenu()
 			end
 			
 			btn.OnMouseReleased = function(s, code)
-				if code == MOUSE_LEFT then
+				if code == MOUSE_LEFT and pttActive then
+					pttActive = false
+					AddLogLine("[TX] Übertragung beendet.", Color(120, 210, 255, 230))
+				end
+			end
+			
+			-- Fix: Release PTT when cursor leaves button
+			btn.OnCursorExited = function(s)
+				if pttActive then
 					pttActive = false
 					AddLogLine("[TX] Übertragung beendet.", Color(120, 210, 255, 230))
 				end
@@ -511,7 +529,9 @@ function NRCHUD.OpenCommsMenu()
 	
 	-- BOOT SEQUENCE
 	timer.Simple(0.1, function()
-		AddLogLine("[BOOT] Transceiver wird gestartet…", Color(120, 210, 255, 230))
+		if IsValid(frame) then
+			AddLogLine("[BOOT] Transceiver wird gestartet…", Color(120, 210, 255, 230))
+		end
 	end)
 	
 	local bootSteps = {
@@ -523,57 +543,73 @@ function NRCHUD.OpenCommsMenu()
 	}
 	
 	local function RunBootStep(step)
+		if not IsValid(frame) then return end
+		
 		if step > #bootSteps then
 			timer.Simple(0.3, function()
 				if IsValid(bootOverlay) then
 					showingBoot = false
 					bootOverlay:SetVisible(false)
 				end
-				AddLogLine("[OK] Uplink steht. Standby.", Color(120, 210, 255, 230))
+				if IsValid(frame) then
+					AddLogLine("[OK] Uplink steht. Standby.", Color(120, 210, 255, 230))
+				end
 			end)
 			return
 		end
 		
 		bootStage = step
 		bootProgress = bootSteps[step].progress
-		timer.Simple(0.5, function()
+		timer.Create("NRCHUD_CommsBootSequence", 0.5, 1, function()
 			RunBootStep(step + 1)
 		end)
 	end
 	
-	timer.Simple(0.3, function() RunBootStep(1) end)
+	timer.Simple(0.3, function() 
+		if IsValid(frame) then
+			RunBootStep(1) 
+		end
+	end)
 	
 	-- Fade in
 	frame:SetAlpha(0)
 	frame:AlphaTo(255, 0.3, 0)
 end
 
--- Network
-net.Receive("NRCHUD_ChannelUserCount", function()
-	local counts = net.ReadTable()
-	NRCHUD.ChannelUserCounts = counts
-end)
-
-net.Receive("NRCHUD_ChannelUpdate", function()
-	local name = net.ReadString()
-	local freq = net.ReadString()
-	local r = net.ReadUInt(8)
-	local g = net.ReadUInt(8)
-	local b = net.ReadUInt(8)
-	local locked = net.ReadBool()
-	local priority = net.ReadUInt(8)
+-- Network (register only once)
+if not NRCHUD.CommsNetworkInit then
+	net.Receive("NRCHUD_ChannelUserCount", function()
+		local counts = net.ReadTable()
+		NRCHUD.ChannelUserCounts = counts
+	end)
 	
-	NRCHUD.CommsFrequencies[name] = {
-		freq = freq,
-		color = Color(r, g, b),
-		locked = locked,
-		priority = priority,
-		custom = true
-	}
-end)
+	net.Receive("NRCHUD_ChannelUpdate", function()
+		local name = net.ReadString()
+		local freq = net.ReadString()
+		local r = net.ReadUInt(8)
+		local g = net.ReadUInt(8)
+		local b = net.ReadUInt(8)
+		local locked = net.ReadBool()
+		local priority = net.ReadUInt(8)
+		
+		if not NRCHUD.CommsFrequencies then
+			NRCHUD.CommsFrequencies = {}
+		end
+		
+		NRCHUD.CommsFrequencies[name] = {
+			freq = freq,
+			color = Color(r, g, b),
+			locked = locked,
+			priority = priority,
+			custom = true
+		}
+	end)
+	
+	NRCHUD.CommsNetworkInit = true
+end
 
 concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (Transparent Background) loaded!")
+print("[NRC HUD] Comms menu (Production Ready) loaded!")
