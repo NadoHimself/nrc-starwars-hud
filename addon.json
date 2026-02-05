@@ -1,0 +1,10 @@
+{
+	"title": "NRC Star Wars HUD",
+	"type": "ServerContent",
+	"tags": ["roleplay", "hud", "darkrp"],
+	"ignore": [
+		"*.md",
+		".git*",
+		"LICENSE"
+	]
+}
