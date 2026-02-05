@@ -10,115 +10,136 @@ local hideHUD = {
 	["DarkRP_HUD"] = true,
 	["DarkRP_EntityDisplay"] = true,
 	["DarkRP_LocalPlayerHUD"] = true,
-	["DarkRP_Agenda"] = true
+	["DarkRP_Agenda"] = true,
+	["DarkRP_ChatReceivers"] = true
 }
 
 hook.Add("HUDShouldDraw", "NRCHUD_HideDefault", function(name)
 	if hideHUD[name] then return false end
 end)
 
+-- Hide DarkRP HUD completely
+hook.Add("HUDDrawTargetID", "NRCHUD_HideDarkRP", function()
+	return false
+end)
+
+hook.Add("HUDDrawPickupHistory", "NRCHUD_HideDarkRP", function()
+	return false
+end)
+
 -- Fonts
 surface.CreateFont("NRCHUD_Identity_Name", {
-	font = "Orbitron",
+	font = "Trebuchet MS",
 	size = 15,
 	weight = 600,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Identity_Rank", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 10,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Vital_Label", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 10,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Vital_Value", {
-	font = "Orbitron",
+	font = "Trebuchet MS",
 	size = 12,
 	weight = 600,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Currency", {
-	font = "Orbitron",
+	font = "Trebuchet MS",
 	size = 16,
 	weight = 600,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Currency_Label", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 9,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Ammo_Current", {
-	font = "Orbitron",
+	font = "Trebuchet MS",
 	size = 48,
 	weight = 600,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Ammo_Reserve", {
-	font = "Orbitron",
+	font = "Trebuchet MS",
 	size = 24,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Weapon_Label", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 10,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Objective_Label", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 10,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Objective_Text", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 14,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Comms_Value", {
-	font = "Orbitron",
+	font = "Trebuchet MS",
 	size = 16,
 	weight = 600,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 surface.CreateFont("NRCHUD_Comms_Label", {
-	font = "Share Tech Mono",
+	font = "Trebuchet MS",
 	size = 9,
 	weight = 400,
-	antialias = true
+	antialias = true,
+	shadow = false
 })
 
 -- Draw glass box
 local function DrawGlassBox(x, y, w, h)
-	-- Background
-	surface.SetDrawColor(0, 0, 0, 102)
-	surface.DrawRect(x, y, w, h)
+	-- Background with blur effect
+	draw.RoundedBox(0, x, y, w, h, Color(0, 0, 0, 102))
 	
 	-- Border
 	surface.SetDrawColor(255, 255, 255, 64)
-	draw.NoTexture()
-	surface.DrawOutlinedRect(x, y, w, h, 1)
+	surface.DrawOutlinedRect(x, y, w, h)
 	
 	-- Left accent
 	surface.SetDrawColor(255, 255, 255, 153)
@@ -129,16 +150,21 @@ end
 local function DrawIdentity()
 	if not NRCHUD.Config.ShowIdentity then return end
 	
-	local x, y = 30, ScrH() - 165
-	local w, h = 280, 45
+	local x = 30
+	local y = ScrH() - 165
+	local w = 280
+	local h = 45
 	
 	DrawGlassBox(x, y, w, h)
 	
 	-- Name
-	draw.SimpleText(NRCHUD.PlayerData.name, "NRCHUD_Identity_Name", x + 14, y + 10, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
+	local displayName = NRCHUD.PlayerData.name or "Unknown"
+	draw.SimpleText(displayName, "NRCHUD_Identity_Name", x + 14, y + 10, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT)
 	
 	-- Rank and Job
-	local rankText = NRCHUD.PlayerData.job .. " • " .. NRCHUD.PlayerData.rank
+	local job = NRCHUD.PlayerData.job or "Unknown"
+	local rank = NRCHUD.PlayerData.rank or "Trooper"
+	local rankText = job .. " • " .. rank
 	draw.SimpleText(rankText, "NRCHUD_Identity_Rank", x + 14, y + 28, Color(255, 255, 255, 165), TEXT_ALIGN_LEFT)
 end
 
@@ -150,14 +176,15 @@ local function DrawVitals()
 	if not IsValid(ply) then return end
 	
 	local health = math.max(0, ply:Health())
-	local maxHealth = ply:GetMaxHealth()
-	local healthPercent = health / maxHealth
+	local maxHealth = ply:GetMaxHealth() or 100
+	local healthPercent = math.Clamp(health / maxHealth, 0, 1)
 	
 	local armor = math.max(0, ply:Armor())
 	local maxArmor = 100
-	local armorPercent = armor / maxArmor
+	local armorPercent = math.Clamp(armor / maxArmor, 0, 1)
 	
-	local x, y = 30, ScrH() - 110
+	local x = 30
+	local y = ScrH() - 110
 	
 	-- Health row
 	local healthW = 280
@@ -206,8 +233,10 @@ end
 local function DrawCurrency()
 	if not NRCHUD.Config.ShowCurrency then return end
 	
-	local x, y = 30, ScrH() - 165 - 48
-	local w, h = 180, 38
+	local x = 30
+	local y = ScrH() - 220
+	local w = 180
+	local h = 38
 	
 	-- Gold border for currency
 	DrawGlassBox(x, y, w, h)
@@ -218,11 +247,12 @@ local function DrawCurrency()
 	draw.SimpleText("◈", "NRCHUD_Currency", x + 20, y + 11, Color(255, 215, 0, 255), TEXT_ALIGN_CENTER)
 	
 	-- Amount
-	local amountText = string.Comma(NRCHUD.PlayerData.currency)
+	local amountText = string.Comma(NRCHUD.PlayerData.currency or 0)
 	draw.SimpleText(amountText, "NRCHUD_Currency", x + 45, y + 10, Color(255, 215, 0, 255), TEXT_ALIGN_LEFT)
 	
 	-- Label
-	draw.SimpleText(NRCHUD.Config.CurrencyName:upper(), "NRCHUD_Currency_Label", x + 45, y + 26, Color(255, 215, 0, 178), TEXT_ALIGN_LEFT)
+	local currencyLabel = NRCHUD.Config.CurrencyName or "CREDITS"
+	draw.SimpleText(currencyLabel:upper(), "NRCHUD_Currency_Label", x + 45, y + 26, Color(255, 215, 0, 178), TEXT_ALIGN_LEFT)
 end
 
 -- Draw ammo
@@ -240,19 +270,26 @@ local function DrawAmmo()
 	
 	if clip < 0 then return end
 	
-	local x, y = ScrW() - 30, ScrH() - 80
+	local x = ScrW() - 30
+	local y = ScrH() - 80
 	
 	-- Current ammo
 	draw.SimpleText(tostring(clip), "NRCHUD_Ammo_Current", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
 	
 	-- Separator
-	draw.SimpleText("/", "NRCHUD_Ammo_Reserve", x, y + 5, Color(255, 255, 255, 102), TEXT_ALIGN_RIGHT)
+	local sepX = x + 5
+	draw.SimpleText("/", "NRCHUD_Ammo_Reserve", sepX, y + 5, Color(255, 255, 255, 102), TEXT_ALIGN_LEFT)
 	
-	-- Reserve ammo
-	draw.SimpleText(tostring(reserve), "NRCHUD_Ammo_Reserve", x + 10, y + 5, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT)
+	-- Reserve ammo  
+	local reserveX = sepX + 15
+	draw.SimpleText(tostring(reserve), "NRCHUD_Ammo_Reserve", reserveX, y + 5, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT)
 	
 	-- Weapon name
-	local weaponName = weapon:GetPrintName():upper()
+	local weaponName = weapon:GetPrintName()
+	if weaponName == "" or weaponName == "Scripted Weapon" then
+		weaponName = weapon:GetClass()
+	end
+	weaponName = string.upper(weaponName)
 	draw.SimpleText(weaponName, "NRCHUD_Weapon_Label", x, y + 35, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT)
 end
 
@@ -315,7 +352,7 @@ local function DrawLowHealthVignette()
 	if not IsValid(ply) then return end
 	
 	local health = ply:Health()
-	local maxHealth = ply:GetMaxHealth()
+	local maxHealth = ply:GetMaxHealth() or 100
 	
 	if health < NRCHUD.Config.LowHealthThreshold then
 		local intensity = 1 - (health / NRCHUD.Config.LowHealthThreshold)
@@ -332,9 +369,9 @@ hook.Add("HUDPaint", "NRCHUD_Draw", function()
 	if not NRCHUD.Config.Enabled then return end
 	
 	DrawLowHealthVignette()
+	DrawCurrency()
 	DrawIdentity()
 	DrawVitals()
-	DrawCurrency()
 	DrawAmmo()
 	DrawHitMarker()
 	DrawDamageIndicators()
