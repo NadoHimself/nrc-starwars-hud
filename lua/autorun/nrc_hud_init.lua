@@ -6,8 +6,16 @@ NRCHUD = NRCHUD or {}
 NRCHUD.Version = "1.0.0"
 NRCHUD.Author = "NadoHimself"
 
+-- Load shared config first
+include("nrc_hud/shared/sh_config.lua")
+AddCSLuaFile("nrc_hud/shared/sh_config.lua")
+
 if SERVER then
-	AddCSLuaFile()
+	-- Add client files to download
+	AddCSLuaFile("nrc_hud/client/cl_init.lua")
+	AddCSLuaFile("nrc_hud/client/cl_hud.lua")
+	AddCSLuaFile("nrc_hud/client/cl_objectives.lua")
+	AddCSLuaFile("nrc_hud/client/cl_commander_menu.lua")
 	
 	-- Load server files
 	include("nrc_hud/server/sv_init.lua")
