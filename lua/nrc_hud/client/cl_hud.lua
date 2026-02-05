@@ -1,177 +1,126 @@
--- NRC Star Wars HUD - Main HUD Rendering (Battlefront II Style)
+-- NRC Star Wars HUD - Main HUD (Fixed Sizing)
 
--- Disable default HUD elements
-local hideHUD = {
+-- Fonts with fallback to system fonts
+surface.CreateFont("NRC_HUD_Orbitron_Big", {font = "Orbitron", size = 52, weight = 900, antialias = true, extended = true})
+surface.CreateFont("NRC_HUD_Orbitron_Medium", {font = "Orbitron", size = 24, weight = 700, antialias = true, extended = true})
+surface.CreateFont("NRC_HUD_Orbitron_Small", {font = "Orbitron", size = 16, weight = 600, antialias = true, extended = true})
+surface.CreateFont("NRC_HUD_Orbitron_Tiny", {font = "Orbitron", size = 14, weight = 600, antialias = true, extended = true})
+surface.CreateFont("NRC_HUD_Mono", {font = "Share Tech Mono", size = 14, weight = 400, antialias = true, extended = true})
+surface.CreateFont("NRC_HUD_Mono_Small", {font = "Share Tech Mono", size = 12, weight = 400, antialias = true, extended = true})
+surface.CreateFont("NRC_HUD_Mono_Tiny", {font = "Share Tech Mono", size = 10, weight = 400, antialias = true, extended = true})
+
+-- Check if custom fonts are loaded
+timer.Simple(1, function()
+	local testFont = surface.GetTextSize("ORBITRON TEST")
+	if testFont == 0 then
+		print("[NRC HUD] WARNING: Custom fonts (Orbitron/Share Tech Mono) not found!")
+		print("[NRC HUD] Please install fonts from resource/fonts/ folder")
+	else
+		print("[NRC HUD] Custom fonts loaded successfully!")
+	end
+end)
+
+NRCHUD = NRCHUD or {}
+NRCHUD.Config = NRCHUD.Config or {}
+NRCHUD.DamageIndicators = NRCHUD.DamageIndicators or {}
+
+-- Config
+NRCHUD.Config.DamageIndicatorDuration = 0.4
+NRCHUD.Config.HitMarkerDuration = 0.15
+
+local scanlineOffset = 0
+
+-- Hide default HUD
+local hideElements = {
 	["CHudHealth"] = true,
 	["CHudBattery"] = true,
 	["CHudAmmo"] = true,
 	["CHudSecondaryAmmo"] = true,
 	["CHudDamageIndicator"] = true,
-	["DarkRP_HUD"] = true,
-	["DarkRP_EntityDisplay"] = true,
-	["DarkRP_LocalPlayerHUD"] = true,
-	["DarkRP_Agenda"] = true,
-	["DarkRP_ChatReceivers"] = true
 }
 
 hook.Add("HUDShouldDraw", "NRCHUD_HideDefault", function(name)
-	if hideHUD[name] then return false end
+	if hideElements[name] then return false end
 end)
 
-hook.Add("HUDDrawTargetID", "NRCHUD_HideDarkRP", function()
-	return false
-end)
-
-hook.Add("HUDDrawPickupHistory", "NRCHUD_HideDarkRP", function()
-	return false
-end)
-
--- Fonts - Battlefront II Style
-surface.CreateFont("NRCHUD_Identity_Name", {
-	font = "Orbitron",
-	size = 15,
-	weight = 600,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Identity_Rank", {
-	font = "Share Tech Mono",
-	size = 10,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Vital_Label", {
-	font = "Share Tech Mono",
-	size = 10,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Vital_Value", {
-	font = "Orbitron",
-	size = 12,
-	weight = 600,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Currency", {
-	font = "Orbitron",
-	size = 16,
-	weight = 600,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Currency_Label", {
-	font = "Share Tech Mono",
-	size = 9,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Ammo_Current", {
-	font = "Orbitron",
-	size = 48,
-	weight = 600,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Ammo_Reserve", {
-	font = "Orbitron",
-	size = 24,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Weapon_Label", {
-	font = "Share Tech Mono",
-	size = 10,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Objective_Label", {
-	font = "Share Tech Mono",
-	size = 10,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Objective_Text", {
-	font = "Share Tech Mono",
-	size = 14,
-	weight = 400,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Comms_Value", {
-	font = "Orbitron",
-	size = 16,
-	weight = 600,
-	antialias = true
-})
-
-surface.CreateFont("NRCHUD_Comms_Label", {
-	font = "Share Tech Mono",
-	size = 9,
-	weight = 400,
-	antialias = true
-})
-
--- Draw glass box with visible border (EXACT PREVIEW STYLE)
-local function DrawGlassBox(x, y, w, h, accentColor)
-	-- Background with blur effect
-	surface.SetDrawColor(0, 0, 0, 102)
-	surface.DrawRect(x, y, w, h)
+-- Main HUD Draw
+hook.Add("HUDPaint", "NRCHUD_Draw", function()
+	local ply = LocalPlayer()
+	if not IsValid(ply) or not ply:Alive() then return end
 	
-	-- Left accent bar (colored)
-	local accent = accentColor or Color(255, 255, 255, 153)
-	surface.SetDrawColor(accent.r, accent.g, accent.b, accent.a)
-	surface.DrawRect(x, y, 2, h)
-end
+	local scrW, scrH = ScrW(), ScrH()
+	
+	-- Scanlines (subtle)
+	scanlineOffset = (scanlineOffset + 0.2) % 7
+	surface.SetDrawColor(255, 255, 255, 4)
+	for i = 0, scrH, 7 do
+		surface.DrawRect(0, i + scanlineOffset, scrW, 1)
+	end
+	
+	-- Corner frames
+	NRCHUD.DrawCornerFrames(scrW, scrH)
+	
+	-- Currency display (ABOVE identity)
+	NRCHUD.DrawCurrency(ply, scrW, scrH)
+	
+	-- Identity card
+	NRCHUD.DrawIdentity(ply, scrW, scrH)
+	
+	-- Health & Armor
+	NRCHUD.DrawVitals(ply, scrW, scrH)
+	
+	-- Ammo display
+	NRCHUD.DrawAmmo(ply, scrW, scrH)
+	
+	-- Minimap
+	NRCHUD.DrawMinimap(ply, scrW, scrH)
+	
+	-- Objective (top left)
+	NRCHUD.DrawObjective(scrW, scrH)
+	
+	-- Comms info (top right)
+	NRCHUD.DrawCommsInfo(ply, scrW, scrH)
+	
+	-- Hit marker
+	NRCHUD.DrawHitMarker(scrW, scrH)
+	
+	-- Damage indicators
+	NRCHUD.DrawDamageIndicators(scrW, scrH)
+	
+	-- Low health vignette
+	NRCHUD.DrawLowHealthVignette(ply, scrW, scrH)
+end)
 
--- Draw corner frames (EXACT PREVIEW STYLE)
-local function DrawCornerFrames()
-	local cornerSize = 60
+-- Corner Frames (60px each corner)
+function NRCHUD.DrawCornerFrames(w, h)
+	local size = 60
 	local offset = 15
-	
-	surface.SetDrawColor(255, 255, 255, 38) -- rgba(255, 255, 255, 0.15)
+	local col = Color(255, 255, 255, 38) -- rgba(255,255,255,0.15)
 	
 	-- Top-left
-	surface.DrawLine(offset, offset, offset + cornerSize, offset)
-	surface.DrawLine(offset, offset, offset, offset + cornerSize)
+	surface.SetDrawColor(col)
+	surface.DrawLine(offset, offset, offset + size, offset) -- Top line
+	surface.DrawLine(offset, offset, offset, offset + size) -- Left line
 	
 	-- Top-right
-	surface.DrawLine(ScrW() - offset - cornerSize, offset, ScrW() - offset, offset)
-	surface.DrawLine(ScrW() - offset, offset, ScrW() - offset, offset + cornerSize)
+	surface.DrawLine(w - offset - size, offset, w - offset, offset) -- Top line
+	surface.DrawLine(w - offset, offset, w - offset, offset + size) -- Right line
 	
 	-- Bottom-left
-	surface.DrawLine(offset, ScrH() - offset, offset, ScrH() - offset - cornerSize)
-	surface.DrawLine(offset, ScrH() - offset, offset + cornerSize, ScrH() - offset)
+	surface.DrawLine(offset, h - offset - size, offset, h - offset) -- Left line
+	surface.DrawLine(offset, h - offset, offset + size, h - offset) -- Bottom line
 	
 	-- Bottom-right
-	surface.DrawLine(ScrW() - offset - cornerSize, ScrH() - offset, ScrW() - offset, ScrH() - offset)
-	surface.DrawLine(ScrW() - offset, ScrH() - offset - cornerSize, ScrW() - offset, ScrH() - offset)
+	surface.DrawLine(w - offset, h - offset - size, w - offset, h - offset) -- Right line
+	surface.DrawLine(w - offset - size, h - offset, w - offset, h - offset) -- Bottom line
 end
 
--- Draw scanlines (EXACT PREVIEW STYLE)
-local scanlineOffset = 0
-local function DrawScanlines()
-	scanlineOffset = (scanlineOffset + 0.5) % 4
-	
-	surface.SetDrawColor(255, 255, 255, 5) -- Very subtle
-	for i = 0, ScrH(), 2 do
-		local y = i + scanlineOffset
-		surface.DrawLine(0, y, ScrW(), y)
-	end
-end
-
--- Draw currency (ABOVE IDENTITY - EXACT PREVIEW POSITION)
-local function DrawCurrency()
-	if not NRCHUD.Config.ShowCurrency then return end
-	
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
+-- Currency Display (FIXED: Above Identity, larger)
+function NRCHUD.DrawCurrency(ply, w, h)
+	local x = 30
+	local y = h - 240 -- ABOVE identity (was 165)
+	local boxW = 220 -- WIDER
+	local boxH = 50 -- TALLER
 	
 	-- Get money from DarkRP
 	local money = 0
@@ -179,431 +128,429 @@ local function DrawCurrency()
 		money = ply:getDarkRPVar("money") or 0
 	elseif ply.GetMoney then
 		money = ply:GetMoney() or 0
-	else
-		money = NRCHUD.PlayerData.currency or 0
 	end
 	
-	local x = 30
-	local y = ScrH() - 165 -- Above identity card
-	local w = 200
-	local h = 40
+	-- Background box (rgba(0,0,0,0.4))
+	surface.SetDrawColor(0, 0, 0, 102)
+	surface.DrawRect(x, y, boxW, boxH)
 	
-	-- Gold accent for currency
-	DrawGlassBox(x, y, w, h, Color(255, 215, 0, 204))
+	-- Gold left border
+	surface.SetDrawColor(255, 215, 0, 204) -- rgba(255,215,0,0.8)
+	surface.DrawRect(x, y, 2, boxH)
 	
 	-- Icon
-	draw.SimpleText("◈", "NRCHUD_Currency", x + 20, y + 10, Color(255, 215, 0, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+	draw.SimpleText("◈", "NRC_HUD_Orbitron_Medium", x + 15, y + boxH / 2, Color(255, 215, 0, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	
-	-- Amount
-	local amountText = string.Comma(money)
-	draw.SimpleText(amountText, "NRCHUD_Currency", x + 40, y + 8, Color(255, 215, 0, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	-- Amount (BIGGER FONT)
+	local amountStr = string.Comma(money)
+	draw.SimpleText(amountStr, "NRC_HUD_Orbitron_Medium", x + 50, y + 15, Color(255, 215, 0, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	
-	-- Label
-	local currencyLabel = NRCHUD.GetText("credits") or "CREDITS"
-	draw.SimpleText(currencyLabel:upper(), "NRCHUD_Currency_Label", x + 40, y + 26, Color(255, 215, 0, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	-- Label (BIGGER)
+	draw.SimpleText(NRCHUD.GetText("credits"), "NRC_HUD_Mono_Tiny", x + 50, y + 35, Color(255, 215, 0, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 end
 
--- Draw identity card (SLIM VERSION - EXACT PREVIEW STYLE)
-local function DrawIdentity()
-	if not NRCHUD.Config.ShowIdentity then return end
-	
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
-	
+-- Identity Card (FIXED: Larger)
+function NRCHUD.DrawIdentity(ply, w, h)
 	local x = 30
-	local y = ScrH() - 110 -- Below currency
-	local w = 300
-	local h = 50
+	local y = h - 170 -- Below currency
+	local boxW = 280 -- WIDER
+	local boxH = 60 -- TALLER
 	
-	DrawGlassBox(x, y, w, h)
+	-- Background
+	surface.SetDrawColor(0, 0, 0, 102)
+	surface.DrawRect(x, y, boxW, boxH)
 	
-	-- Get player data
-	local displayName = NRCHUD.PlayerData.name
-	if not displayName or displayName == "" or displayName == "Unknown" then
-		displayName = ply:Nick()
-	end
+	-- White left border
+	surface.SetDrawColor(255, 255, 255, 153)
+	surface.DrawRect(x, y, 2, boxH)
 	
-	local job = NRCHUD.PlayerData.job
-	if not job or job == "" or job == "Unknown" then
-		if DarkRP and ply.getDarkRPVar then
-			job = ply:getDarkRPVar("job") or team.GetName(ply:Team()) or "Civilian"
-		else
-			job = team.GetName(ply:Team()) or "Civilian"
-		end
-	end
+	local name = NRCHUD.PlayerData.name or ply:Nick()
+	local job = NRCHUD.PlayerData.job or "Trooper"
 	
-	local rank = NRCHUD.PlayerData.rank
-	if not rank or rank == "" or rank == "Unknown" then
-		rank = "Trooper"
-	end
+	-- Name (BIGGER FONT)
+	draw.SimpleText(name, "NRC_HUD_Orbitron_Small", x + 14, y + 12, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	
-	-- Name
-	draw.SimpleText(displayName, "NRCHUD_Identity_Name", x + 14, y + 8, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-	
-	-- Rank and Job (single line with bullet separator)
-	local rankText = rank .. " • " .. job
-	draw.SimpleText(rankText, "NRCHUD_Identity_Rank", x + 14, y + 28, Color(255, 255, 255, 166), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	-- Job/Rank (BIGGER)
+	draw.SimpleText(job, "NRC_HUD_Mono_Small", x + 14, y + 38, Color(255, 255, 255, 166), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 end
 
--- Draw health and armor (SLIM VERSION - EXACT PREVIEW STYLE)
-local function DrawVitals()
-	if not NRCHUD.Config.ShowHealth then return end
-	
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
+-- Health & Armor (FIXED: Larger bars)
+function NRCHUD.DrawVitals(ply, w, h)
+	local x = 30
+	local y = h - 95 -- Below identity
+	local spacing = 12 -- More space between bars
+	local boxW = 280 -- WIDER
+	local boxH = 38 -- TALLER
 	
 	local health = math.max(0, ply:Health())
-	local maxHealth = ply:GetMaxHealth() or 100
-	local healthPercent = math.Clamp(health / maxHealth, 0, 1)
-	
 	local armor = math.max(0, ply:Armor())
-	local maxArmor = 100
-	local armorPercent = math.Clamp(armor / maxArmor, 0, 1)
 	
-	local x = 30
-	local y = ScrH() - 30 -- Bottom
-	local w = 270
-	local h = 28
-	
-	-- Health row
-	DrawGlassBox(x, y, w, h)
-	
-	draw.SimpleText("HEALTH", "NRCHUD_Vital_Label", x + 12, y + 6, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-	
-	-- Health bar
-	local barX = x + 70
-	local barY = y + 12
-	local barW = 150
-	local barH = 5
-	
-	-- Bar background
-	surface.SetDrawColor(255, 255, 255, 26)
-	surface.DrawRect(barX, barY, barW, barH)
-	
-	-- Bar fill with glow
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.DrawRect(barX, barY, barW * healthPercent, barH)
-	
-	-- Health value
-	draw.SimpleText(tostring(math.floor(health)), "NRCHUD_Vital_Value", x + w - 12, y + 8, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	
-	-- Armor row
-	if NRCHUD.Config.ShowArmor then
-		local armorY = y - 36
+	-- HEALTH BAR
+	do
+		-- Background
+		surface.SetDrawColor(0, 0, 0, 102)
+		surface.DrawRect(x, y, boxW, boxH)
 		
-		DrawGlassBox(x, armorY, w, h)
+		-- White left border
+		surface.SetDrawColor(255, 255, 255, 153)
+		surface.DrawRect(x, y, 2, boxH)
 		
-		draw.SimpleText("ARMOR", "NRCHUD_Vital_Label", x + 12, armorY + 6, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		-- Label (BIGGER)
+		draw.SimpleText("HEALTH", "NRC_HUD_Mono_Tiny", x + 14, y + 8, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		
-		-- Armor bar
+		-- Bar background
+		local barX = x + 14
+		local barY = y + 22
+		local barW = 180 -- WIDER BAR
+		local barH = 6 -- Slightly taller
+		
 		surface.SetDrawColor(255, 255, 255, 26)
-		surface.DrawRect(barX, armorY + 12, barW, barH)
+		surface.DrawRect(barX, barY, barW, barH)
 		
-		-- Armor fill (slightly transparent)
+		-- Bar fill
+		local fillW = (health / 100) * barW
+		surface.SetDrawColor(255, 255, 255, 255)
+		surface.DrawRect(barX, barY, fillW, barH)
+		
+		-- Glow
+		for i = 1, 3 do
+			surface.SetDrawColor(255, 255, 255, 128 / i)
+			surface.DrawRect(barX, barY - i, fillW, barH + i * 2)
+		end
+		
+		-- Value (BIGGER)
+		draw.SimpleText(tostring(health), "NRC_HUD_Orbitron_Tiny", barX + barW + 20, y + boxH / 2, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+	end
+	
+	-- ARMOR BAR
+	do
+		local armorY = y + boxH + spacing
+		
+		-- Background
+		surface.SetDrawColor(0, 0, 0, 102)
+		surface.DrawRect(x, armorY, boxW, boxH)
+		
+		-- White left border
+		surface.SetDrawColor(255, 255, 255, 153)
+		surface.DrawRect(x, armorY, 2, boxH)
+		
+		-- Label
+		draw.SimpleText("ARMOR", "NRC_HUD_Mono_Tiny", x + 14, armorY + 8, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		
+		-- Bar background
+		local barX = x + 14
+		local barY = armorY + 22
+		local barW = 180
+		local barH = 6
+		
+		surface.SetDrawColor(255, 255, 255, 26)
+		surface.DrawRect(barX, barY, barW, barH)
+		
+		-- Bar fill (slightly transparent)
+		local fillW = (armor / 100) * barW
 		surface.SetDrawColor(255, 255, 255, 191)
-		surface.DrawRect(barX, armorY + 12, barW * armorPercent, barH)
+		surface.DrawRect(barX, barY, fillW, barH)
 		
-		-- Armor value
-		draw.SimpleText(tostring(math.floor(armor)), "NRCHUD_Vital_Value", x + w - 12, armorY + 8, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+		-- Glow
+		for i = 1, 3 do
+			surface.SetDrawColor(255, 255, 255, 102 / i)
+			surface.DrawRect(barX, barY - i, fillW, barH + i * 2)
+		end
+		
+		-- Value
+		draw.SimpleText(tostring(armor), "NRC_HUD_Orbitron_Tiny", barX + barW + 20, armorY + boxH / 2, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 	end
 end
 
--- Draw ammo (BOTTOM RIGHT - EXACT PREVIEW STYLE)
-local function DrawAmmo()
-	if not NRCHUD.Config.ShowAmmo then return end
+-- Ammo Display (FIXED: Inside screen, MUCH BIGGER)
+function NRCHUD.DrawAmmo(ply, w, h)
+	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) then return end
 	
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
+	local clip = wep:Clip1()
+	local reserve = ply:GetAmmoCount(wep:GetPrimaryAmmoType())
 	
-	local weapon = ply:GetActiveWeapon()
-	if not IsValid(weapon) then return end
+	if clip < 0 and reserve <= 0 then return end
 	
-	local clip = weapon:Clip1()
-	local reserve = ply:GetAmmoCount(weapon:GetPrimaryAmmoType())
+	-- FIXED POSITION: Inside screen, bottom-right
+	local x = w - 250 -- Much more left (was w - 30)
+	local y = h - 120 -- Much higher up (was h - 70)
 	
-	if clip < 0 then return end
-	
-	local x = ScrW() - 30
-	local y = ScrH() - 70 -- Moved up slightly
-	
-	-- Current ammo (large)
-	draw.SimpleText(tostring(clip), "NRCHUD_Ammo_Current", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+	-- Current ammo (HUGE)
+	if clip >= 0 then
+		draw.SimpleText(tostring(clip), "NRC_HUD_Orbitron_Big", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+	end
 	
 	-- Separator
-	surface.SetFont("NRCHUD_Ammo_Reserve")
-	local sepW = surface.GetTextSize("/")
-	draw.SimpleText("/", "NRCHUD_Ammo_Reserve", x + 8, y + 10, Color(255, 255, 255, 102), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	local sepX = x + 15
+	draw.SimpleText("/", "NRC_HUD_Orbitron_Medium", sepX, y, Color(255, 255, 255, 102), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	
-	-- Reserve ammo (smaller)
-	draw.SimpleText(tostring(reserve), "NRCHUD_Ammo_Reserve", x + 8 + sepW + 8, y + 10, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	-- Reserve (BIGGER)
+	local resX = sepX + 35
+	draw.SimpleText(tostring(reserve), "NRC_HUD_Orbitron_Medium", resX, y, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	
-	-- Weapon name
-	local weaponName = weapon:GetPrintName()
-	if weaponName == "" or weaponName == "Scripted Weapon" then
-		weaponName = weapon:GetClass()
-	end
+	-- Weapon name (MUCH BIGGER AND READABLE)
+	local weaponName = wep:GetPrintName() or wep:GetClass()
 	weaponName = string.upper(weaponName)
-	draw.SimpleText(weaponName, "NRCHUD_Weapon_Label", x, y + 52, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+	
+	draw.SimpleText(weaponName, "NRC_HUD_Mono_Small", x + 10, y + 40, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 end
 
--- Draw minimap (CIRCULAR - EXACT PREVIEW STYLE)
-local function DrawMinimap()
-	if not NRCHUD.Config.ShowMinimap then return end
-	
+-- Minimap (Perfect circle with stencil)
+function NRCHUD.DrawMinimap(ply, w, h)
+	local x = w - 30 - 130 -- 30px from right edge
+	local y = h - 120 - 130 -- Above ammo
 	local size = 130
-	local x = ScrW() - 30 - size
-	local y = ScrH() - 120 - size
-	
-	local centerX = x + size / 2
-	local centerY = y + size / 2
 	local radius = size / 2
 	
-	-- Stencil for circular clipping
+	-- Start stencil (circle mask)
 	render.ClearStencil()
 	render.SetStencilEnable(true)
-	
 	render.SetStencilWriteMask(1)
 	render.SetStencilTestMask(1)
-	
-	render.SetStencilFailOperation(STENCILOPERATION_REPLACE)
-	render.SetStencilPassOperation(STENCILOPERATION_ZERO)
-	render.SetStencilZFailOperation(STENCILOPERATION_KEEP)
-	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_NEVER)
 	render.SetStencilReferenceValue(1)
+	render.SetStencilCompareFunction(STENCIL_NEVER)
+	render.SetStencilFailOperation(STENCIL_REPLACE)
+	render.SetStencilZFailOperation(STENCIL_KEEP)
 	
 	-- Draw circle mask
 	draw.NoTexture()
-	surface.SetDrawColor(255, 255, 255, 255)
+	surface.SetDrawColor(255, 255, 255)
 	local circle = {}
 	for i = 0, 360, 6 do
 		local rad = math.rad(i)
-		table.insert(circle, {x = centerX + math.cos(rad) * radius, y = centerY + math.sin(rad) * radius})
+		table.insert(circle, {x = x + radius + math.cos(rad) * radius, y = y + radius + math.sin(rad) * radius})
 	end
 	surface.DrawPoly(circle)
 	
-	render.SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL)
-	render.SetStencilPassOperation(STENCILOPERATION_KEEP)
-	render.SetStencilFailOperation(STENCILOPERATION_KEEP)
+	-- Now draw only inside circle
+	render.SetStencilCompareFunction(STENCIL_EQUAL)
+	render.SetStencilFailOperation(STENCIL_KEEP)
 	
-	-- Background
+	-- Background (rgba(0,0,0,0.5))
 	surface.SetDrawColor(0, 0, 0, 128)
 	surface.DrawRect(x, y, size, size)
 	
-	-- Grid lines (crosshair style)
+	-- Crosshair lines (vertical + horizontal)
 	surface.SetDrawColor(255, 255, 255, 13)
-	-- Vertical
-	surface.DrawLine(centerX, y, centerX, y + size)
-	-- Horizontal
-	surface.DrawLine(x, centerY, x + size, centerY)
+	surface.DrawLine(x + radius, y, x + radius, y + size) -- Vertical
+	surface.DrawLine(x, y + radius, x + size, y + radius) -- Horizontal
 	
-	-- Center ring
-	draw.NoTexture()
-	surface.SetDrawColor(255, 255, 255, 26)
+	-- Center ring (at 48% radius)
 	local ringRadius = radius * 0.48
+	surface.SetDrawColor(255, 255, 255, 77)
+	draw.NoTexture()
 	local ringCircle = {}
 	for i = 0, 360, 6 do
 		local rad = math.rad(i)
-		table.insert(ringCircle, {x = centerX + math.cos(rad) * ringRadius, y = centerY + math.sin(rad) * ringRadius})
+		table.insert(ringCircle, {x = x + radius + math.cos(rad) * ringRadius, y = y + radius + math.sin(rad) * ringRadius})
 	end
 	surface.DrawPoly(ringCircle)
 	
-	-- Player indicator (white triangle)
-	local ply = LocalPlayer()
-	if IsValid(ply) then
-		local ang = ply:EyeAngles().y
-		local rad = math.rad(-ang + 90)
-		
-		local triSize = 6
-		local tri = {
-			{x = centerX + math.cos(rad) * triSize, y = centerY + math.sin(rad) * triSize},
-			{x = centerX + math.cos(rad + math.rad(140)) * triSize, y = centerY + math.sin(rad + math.rad(140)) * triSize},
-			{x = centerX + math.cos(rad - math.rad(140)) * triSize, y = centerY + math.sin(rad - math.rad(140)) * triSize}
-		}
-		
-		draw.NoTexture()
-		surface.SetDrawColor(255, 255, 255, 255)
-		surface.DrawPoly(tri)
+	-- Player triangle (white, pointing forward)
+	local angle = ply:EyeAngles().y
+	local triSize = 9
+	local cx, cy = x + radius, y + radius
+	
+	local function rotatePoint(px, py, cx, cy, angle)
+		local s = math.sin(math.rad(-angle + 90))
+		local c = math.cos(math.rad(-angle + 90))
+		local dx, dy = px - cx, py - cy
+		return cx + dx * c - dy * s, cy + dx * s + dy * c
 	end
 	
-	-- Example dots (enemies and allies)
-	-- Red enemies
-	surface.SetDrawColor(255, 68, 68, 255)
+	local p1x, p1y = rotatePoint(cx, cy - triSize, cx, cy, angle)
+	local p2x, p2y = rotatePoint(cx - triSize * 0.6, cy + triSize * 0.6, cx, cy, angle)
+	local p3x, p3y = rotatePoint(cx + triSize * 0.6, cy + triSize * 0.6, cx, cy, angle)
+	
+	surface.SetDrawColor(255, 255, 255, 255)
 	draw.NoTexture()
-	local function DrawDot(dx, dy, color)
-		surface.SetDrawColor(color.r, color.g, color.b, color.a)
-		local dotSize = 2.5
+	surface.DrawPoly({{x = p1x, y = p1y}, {x = p2x, y = p2y}, {x = p3x, y = p3y}})
+	
+	-- Example dots (red = enemies, green = allies)
+	-- TODO: Replace with actual entity positions
+	local dots = {
+		{x = 0.3, y = 0.6, enemy = true},
+		{x = 0.7, y = 0.35, enemy = true},
+		{x = 0.55, y = 0.75, enemy = false},
+		{x = 0.4, y = 0.25, enemy = false},
+	}
+	
+	for _, dot in ipairs(dots) do
+		local dx = x + dot.x * size
+		local dy = y + dot.y * size
+		
+		if dot.enemy then
+			surface.SetDrawColor(255, 68, 68, 255)
+		else
+			surface.SetDrawColor(68, 255, 68, 255)
+		end
+		
+		draw.NoTexture()
 		local dotCircle = {}
 		for i = 0, 360, 30 do
 			local rad = math.rad(i)
-			table.insert(dotCircle, {x = dx + math.cos(rad) * dotSize, y = dy + math.sin(rad) * dotSize})
+			table.insert(dotCircle, {x = dx + math.cos(rad) * 2.5, y = dy + math.sin(rad) * 2.5})
 		end
 		surface.DrawPoly(dotCircle)
+		
+		-- Glow
+		for i = 1, 2 do
+			if dot.enemy then
+				surface.SetDrawColor(255, 68, 68, 154 / i)
+			else
+				surface.SetDrawColor(68, 255, 68, 154 / i)
+			end
+			local glowCircle = {}
+			for j = 0, 360, 30 do
+				local rad = math.rad(j)
+				table.insert(glowCircle, {x = dx + math.cos(rad) * (2.5 + i), y = dy + math.sin(rad) * (2.5 + i)})
+			end
+			surface.DrawPoly(glowCircle)
+		end
 	end
 	
-	-- Example positions
-	DrawDot(centerX + 20, centerY - 30, Color(255, 68, 68, 255))
-	DrawDot(centerX - 25, centerY + 20, Color(255, 68, 68, 255))
-	DrawDot(centerX + 35, centerY + 15, Color(68, 255, 68, 255))
-	DrawDot(centerX - 20, centerY - 25, Color(68, 255, 68, 255))
-	
+	-- End stencil
 	render.SetStencilEnable(false)
 	
 	-- Border (outside stencil)
-	surface.SetDrawColor(255, 255, 255, 77) -- rgba(255, 255, 255, 0.3)
-	draw.NoTexture()
-	for i = 0, 360, 3 do
+	surface.SetDrawColor(255, 255, 255, 77)
+	for i = 0, 360, 2 do
 		local rad1 = math.rad(i)
-		local rad2 = math.rad(i + 3)
-		
-		local x1 = centerX + math.cos(rad1) * (radius - 1)
-		local y1 = centerY + math.sin(rad1) * (radius - 1)
-		local x2 = centerX + math.cos(rad2) * (radius - 1)
-		local y2 = centerY + math.sin(rad2) * (radius - 1)
-		
+		local rad2 = math.rad(i + 2)
+		local x1 = x + radius + math.cos(rad1) * radius
+		local y1 = y + radius + math.sin(rad1) * radius
+		local x2 = x + radius + math.cos(rad2) * radius
+		local y2 = y + radius + math.sin(rad2) * radius
 		surface.DrawLine(x1, y1, x2, y2)
 	end
 end
 
--- Draw objective (TOP LEFT - EXACT PREVIEW STYLE)
-local function DrawObjective()
-	if not NRCHUD.PlayerData.objective or NRCHUD.PlayerData.objective == "" then return end
-	
+-- Objective (top left)
+function NRCHUD.DrawObjective(w, h)
 	local x = 30
 	local y = 25
 	
-	-- Pulsing dot indicator
-	local pulse = math.abs(math.sin(CurTime() * 2)) * 0.5 + 0.5
-	surface.SetDrawColor(255, 255, 255, 128 * pulse)
+	-- Pulsing dot
+	local alpha = math.abs(math.sin(CurTime() * 2)) * 128 + 127
+	surface.SetDrawColor(255, 255, 255, alpha)
 	draw.NoTexture()
-	local dotSize = 4
-	local dotCircle = {}
+	local dot = {}
 	for i = 0, 360, 30 do
 		local rad = math.rad(i)
-		table.insert(dotCircle, {x = x + 4 + math.cos(rad) * dotSize, y = y + 4 + math.sin(rad) * dotSize})
+		table.insert(dot, {x = x + math.cos(rad) * 4, y = y + 8 + math.sin(rad) * 4})
 	end
-	surface.DrawPoly(dotCircle)
+	surface.DrawPoly(dot)
 	
-	-- Label
-	draw.SimpleText("OBJECTIVE", "NRCHUD_Objective_Label", x + 18, y, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	-- Label (BIGGER)
+	draw.SimpleText("OBJECTIVE", "NRC_HUD_Mono_Tiny", x + 15, y, Color(255, 255, 255, 153), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	
-	-- Text
-	draw.SimpleText(NRCHUD.PlayerData.objective, "NRCHUD_Objective_Text", x, y + 16, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+	-- Objective text (BIGGER)
+	local objective = NRCHUD.PlayerData.objective or "Secure Command Post - Hangar Bay"
+	draw.SimpleText(objective, "NRC_HUD_Mono_Small", x, y + 22, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 end
 
--- Draw comms info (TOP RIGHT - EXACT PREVIEW STYLE)
-local function DrawCommsInfo()
-	local x = ScrW() - 30
+-- Comms Info (top right) (BIGGER FONTS)
+function NRCHUD.DrawCommsInfo(ply, w, h)
+	local x = w - 30
 	local y = 25
-	local lineHeight = 32
+	local lineH = 35 -- More spacing
 	
-	-- Comms channel
-	local channel = NRCHUD.PlayerData.commsChannel or "Battalion Net"
-	local freq = "445.7 MHz"
-	if NRCHUD.CommsFrequencies[channel] then
-		freq = NRCHUD.CommsFrequencies[channel].freq
+	-- 4 lines of info
+	local info = {
+		{label = NRCHUD.GetText("comms_channel"), value = NRCHUD.PlayerData.commsChannel or "BATTALION", hasIndicator = true},
+		{label = NRCHUD.GetText("frequency"), value = "445.750 MHz"},
+		{label = NRCHUD.GetText("location"), value = NRCHUD.PlayerData.location or "GRID 447-B"},
+		{label = NRCHUD.GetText("time"), value = os.date("%H:%M")},
+	}
+	
+	for i, item in ipairs(info) do
+		local yPos = y + (i - 1) * lineH
+		
+		-- Value (BIGGER)
+		local valueX = x
+		if item.hasIndicator then
+			-- Blinking green dot
+			local dotAlpha = math.abs(math.sin(CurTime() * 1.5)) * 128 + 127
+			surface.SetDrawColor(74, 222, 128, dotAlpha)
+			draw.NoTexture()
+			local dotCircle = {}
+			for j = 0, 360, 30 do
+				local rad = math.rad(j)
+				table.insert(dotCircle, {x = valueX - 15 + math.cos(rad) * 3, y = yPos + 8 + math.sin(rad) * 3})
+			end
+			surface.DrawPoly(dotCircle)
+			
+			-- Glow
+			surface.SetDrawColor(74, 222, 128, dotAlpha / 2)
+			for k = 1, 2 do
+				local glowCircle = {}
+				for j = 0, 360, 30 do
+					local rad = math.rad(j)
+					table.insert(glowCircle, {x = valueX - 15 + math.cos(rad) * (3 + k), y = yPos + 8 + math.sin(rad) * (3 + k)})
+				end
+				surface.DrawPoly(glowCircle)
+			end
+		end
+		
+		draw.SimpleText(item.value, "NRC_HUD_Orbitron_Small", valueX, yPos, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+		
+		-- Label (BIGGER)
+		draw.SimpleText(item.label, "NRC_HUD_Mono_Tiny", valueX, yPos + 18, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 	end
-	
-	-- Blinking indicator
-	local blink = math.abs(math.sin(CurTime() * 1.5))
-	surface.SetDrawColor(74, 222, 128, 255 * blink)
-	draw.NoTexture()
-	local indSize = 3
-	local indCircle = {}
-	for i = 0, 360, 30 do
-		local rad = math.rad(i)
-		table.insert(indCircle, {x = x - 10 + math.cos(rad) * indSize, y = y + 8 + math.sin(rad) * indSize})
-	end
-	surface.DrawPoly(indCircle)
-	
-	draw.SimpleText(channel:upper(), "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	draw.SimpleText(NRCHUD.GetText("comms_channel") or "COMMS CHANNEL", "NRCHUD_Comms_Label", x, y + 18, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	
-	y = y + lineHeight
-	
-	-- Frequency
-	draw.SimpleText(freq, "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	draw.SimpleText(NRCHUD.GetText("frequency") or "FREQUENCY", "NRCHUD_Comms_Label", x, y + 18, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	
-	y = y + lineHeight
-	
-	-- Location
-	local location = NRCHUD.PlayerData.location or "GRID 447-B"
-	draw.SimpleText(location, "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	draw.SimpleText(NRCHUD.GetText("location") or "LOCATION", "NRCHUD_Comms_Label", x, y + 18, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	
-	y = y + lineHeight
-	
-	-- Time
-	local time = os.date("%H:%M")
-	draw.SimpleText(time, "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-	draw.SimpleText(NRCHUD.GetText("time") or "TIME", "NRCHUD_Comms_Label", x, y + 18, Color(255, 255, 255, 128), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 end
 
--- Draw hit marker
-local function DrawHitMarker()
-	if not NRCHUD.Config.ShowHitMarker or not NRCHUD.ShowingHitMarker then return end
+-- Hit Marker
+function NRCHUD.DrawHitMarker(w, h)
+	if not NRCHUD.ShowingHitMarker then return end
 	
-	local cx, cy = ScrW() / 2, ScrH() / 2
-	local size = 10
-	local gap = 8
-	local thickness = 1.5
+	local cx, cy = w / 2, h / 2
+	local size = 30
+	local lineLen = 10
+	local lineThick = 1.5
+	local offset = 5
 	
 	surface.SetDrawColor(255, 255, 255, 255)
 	
 	-- Top-left
-	for i = 0, thickness do
-		surface.DrawLine(cx - gap - size, cy - gap - size + i, cx - gap, cy - gap + i)
+	for i = 0, lineThick do
+		surface.DrawLine(cx - offset - lineLen + i, cy - offset - i, cx - offset + i, cy - offset - lineLen + i)
 	end
 	
 	-- Top-right
-	for i = 0, thickness do
-		surface.DrawLine(cx + gap + size, cy - gap - size + i, cx + gap, cy - gap + i)
+	for i = 0, lineThick do
+		surface.DrawLine(cx + offset + i, cy - offset - lineLen + i, cx + offset + lineLen - i, cy - offset - i)
 	end
 	
 	-- Bottom-left
-	for i = 0, thickness do
-		surface.DrawLine(cx - gap - size, cy + gap + size - i, cx - gap, cy + gap - i)
+	for i = 0, lineThick do
+		surface.DrawLine(cx - offset - lineLen + i, cy + offset + i, cx - offset + i, cy + offset + lineLen - i)
 	end
 	
 	-- Bottom-right
-	for i = 0, thickness do
-		surface.DrawLine(cx + gap + size, cy + gap + size - i, cx + gap, cy + gap - i)
+	for i = 0, lineThick do
+		surface.DrawLine(cx + offset + i, cy + offset + lineLen - i, cx + offset + lineLen - i, cy + offset + i)
 	end
 end
 
--- Draw damage indicators
-local function DrawDamageIndicators()
-	if not NRCHUD.Config.ShowDamageIndicator then return end
-	
-	local currentTime = CurTime()
+-- Damage Indicators
+function NRCHUD.DrawDamageIndicators(w, h)
+	local cx, cy = w / 2, h / 2
+	local curTime = CurTime()
 	
 	for direction, endTime in pairs(NRCHUD.DamageIndicators) do
-		if currentTime < endTime then
-			local alpha = math.Clamp((endTime - currentTime) / NRCHUD.Config.DamageIndicatorDuration * 153, 0, 153)
-			
+		if curTime < endTime then
+			local alpha = ((endTime - curTime) / NRCHUD.Config.DamageIndicatorDuration) * 153
 			surface.SetDrawColor(255, 255, 255, alpha)
 			
-			local cx, cy = ScrW() / 2, ScrH() / 2
-			local offset = 200
-			local size = 50
-			local thickness = 3
-			
 			if direction == "Top" then
-				for i = 0, thickness do
-					surface.DrawLine(cx - size/2, cy - offset + i, cx + size/2, cy - offset + i)
-				end
+				surface.DrawRect(cx - 25, cy * 0.25, 50, 3)
 			elseif direction == "Bottom" then
-				for i = 0, thickness do
-					surface.DrawLine(cx - size/2, cy + offset - i, cx + size/2, cy + offset - i)
-				end
+				surface.DrawRect(cx - 25, cy * 1.75, 50, 3)
 			elseif direction == "Left" then
-				for i = 0, thickness do
-					surface.DrawLine(cx - offset + i, cy - size/2, cx - offset + i, cy + size/2)
-				end
+				surface.DrawRect(cx * 0.25, cy - 25, 3, 50)
 			elseif direction == "Right" then
-				for i = 0, thickness do
-					surface.DrawLine(cx + offset - i, cy - size/2, cx + offset - i, cy + size/2)
-				end
+				surface.DrawRect(cx * 1.75, cy - 25, 3, 50)
 			end
 		else
 			NRCHUD.DamageIndicators[direction] = nil
@@ -611,43 +558,25 @@ local function DrawDamageIndicators()
 	end
 end
 
--- Draw low health vignette
-local function DrawLowHealthVignette()
-	if not NRCHUD.Config.LowHealthEffect then return end
-	
-	local ply = LocalPlayer()
-	if not IsValid(ply) then return end
-	
+-- Low Health Vignette
+function NRCHUD.DrawLowHealthVignette(ply, w, h)
 	local health = ply:Health()
-	local maxHealth = ply:GetMaxHealth() or 100
+	if health >= 35 then return end
 	
-	if health < NRCHUD.Config.LowHealthThreshold then
-		local intensity = 1 - (health / NRCHUD.Config.LowHealthThreshold)
-		local pulse = math.abs(math.sin(CurTime() * 1.5)) * 0.3 + 0.3
-		local alpha = intensity * pulse * 76
-		
-		surface.SetDrawColor(255, 0, 0, alpha)
-		surface.DrawRect(0, 0, ScrW(), ScrH())
+	local alpha = math.Clamp((35 - health) / 35, 0, 1)
+	alpha = alpha * (math.abs(math.sin(CurTime() * 1.5)) * 0.3 + 0.3)
+	alpha = alpha * 153 -- 0.6 max
+	
+	-- Red vignette from edges
+	for i = 1, 20 do
+		local dist = i * 40
+		local edgeAlpha = (i / 20) * alpha
+		surface.SetDrawColor(255, 0, 0, edgeAlpha)
+		surface.DrawRect(0, h - dist, w, dist)
+		surface.DrawRect(0, 0, w, dist)
+		surface.DrawRect(0, 0, dist, h)
+		surface.DrawRect(w - dist, 0, dist, h)
 	end
 end
 
--- Main HUD draw hook
-hook.Add("HUDPaint", "NRCHUD_Draw", function()
-	if not NRCHUD.Config.Enabled then return end
-	
-	-- Draw in correct order
-	DrawScanlines()
-	DrawLowHealthVignette()
-	DrawCornerFrames()
-	DrawCurrency()
-	DrawIdentity()
-	DrawVitals()
-	DrawAmmo()
-	DrawMinimap()
-	DrawObjective()
-	DrawCommsInfo()
-	DrawHitMarker()
-	DrawDamageIndicators()
-end)
-
-print("[NRC HUD] HUD rendering loaded! (Battlefront II Style)")
+print("[NRC HUD] Main HUD (FIXED sizing) loaded!")
