@@ -13,10 +13,26 @@ NRCHUD.Config.Language = "en"
 -- Debug mode
 NRCHUD.Config.Debug = false
 
+-- HUD Elements
+NRCHUD.Config.Enabled = true
+NRCHUD.Config.ShowHealth = true
+NRCHUD.Config.ShowArmor = true
+NRCHUD.Config.ShowAmmo = true
+NRCHUD.Config.ShowCurrency = true
+NRCHUD.Config.ShowIdentity = true
+NRCHUD.Config.ShowMinimap = true
+NRCHUD.Config.ShowHitMarker = true
+NRCHUD.Config.ShowDamageIndicator = true
+
+-- Effects
+NRCHUD.Config.LowHealthEffect = true
+NRCHUD.Config.LowHealthThreshold = 35
+NRCHUD.Config.DamageIndicatorDuration = 0.4
+
 -- Voice integration settings
 NRCHUD.VoiceIntegration = {
-	enabled = false, -- Enable auto voice channel switching
-	addon = "none" -- "tokovoip", "saltychat", "pma-voice", "none"
+	enabled = false,
+	addon = "none"
 }
 
 -- ========================================
@@ -64,6 +80,10 @@ NRCHUD.Translations = {
 		ammo = "AMMO",
 		online = "ONLINE",
 		offline = "OFFLINE",
+		credits = "CREDITS",
+		comms_channel = "COMMS CHANNEL",
+		location = "LOCATION",
+		time = "TIME",
 		
 		-- Objectives
 		mission_objectives = "MISSION OBJECTIVES",
@@ -119,6 +139,10 @@ NRCHUD.Translations = {
 		ammo = "MUNITION",
 		online = "ONLINE",
 		offline = "OFFLINE",
+		credits = "CREDITS",
+		comms_channel = "FUNKKANAL",
+		location = "POSITION",
+		time = "ZEIT",
 		
 		-- Objectives
 		mission_objectives = "MISSIONSAUFTRÄGE",
