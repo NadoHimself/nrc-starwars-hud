@@ -9,58 +9,10 @@ surface.CreateFont("NRC_CommsSmall", {font = "Orbitron", size = 12, weight = 600
 NRCHUD.CommsMenu = NRCHUD.CommsMenu or {}
 NRCHUD.ChannelUserCounts = NRCHUD.ChannelUserCounts or {}
 
-local currentLang = NRCHUD.Config.Language or "en"
-
-local translations = {
-	en = {
-		title = "TACTICAL COMMS NETWORK",
-		subtitle = "Secure Military Communications",
-		activeChannel = "ACTIVE CHANNEL",
-		standardChannels = "STANDARD CHANNELS",
-		customChannels = "CUSTOM CHANNELS",
-		settings = "SETTINGS",
-		users = "users",
-		createChannel = "CREATE CUSTOM CHANNEL",
-		connected = "CONNECTED",
-		close = "CLOSE",
-		channelName = "Channel Name",
-		frequency = "Frequency",
-		create = "CREATE",
-		cancel = "CANCEL",
-		voiceSettings = "Voice Settings",
-		autoSwitch = "Auto-switch voice channel",
-		sound = "Sound Effects",
-		soundVolume = "Sound Volume"
-	},
-	de = {
-		title = "TAKTISCHES FUNKNETZWERK",
-		subtitle = "Sichere Militärkommunikation",
-		activeChannel = "AKTIVER KANAL",
-		standardChannels = "STANDARD KANÄLE",
-		customChannels = "EIGENE KANÄLE",
-		settings = "EINSTELLUNGEN",
-		users = "Nutzer",
-		createChannel = "EIGENEN KANAL ERSTELLEN",
-		connected = "VERBUNDEN",
-		close = "SCHLIESSEN",
-		channelName = "Kanalname",
-		frequency = "Frequenz",
-		create = "ERSTELLEN",
-		cancel = "ABBRECHEN",
-		voiceSettings = "Spracheinstellungen",
-		autoSwitch = "Automatischer Kanalwechsel",
-		sound = "Soundeffekte",
-		soundVolume = "Lautstärke"
-	}
-}
-
-function NRCHUD.GetTranslation(key)
-	return translations[currentLang] and translations[currentLang][key] or translations["en"][key] or key
-end
-
 function NRCHUD.OpenCommsMenu()
 	if IsValid(NRCHUD.CommsMenu.Frame) then
 		NRCHUD.CommsMenu.Frame:Remove()
+		return
 	end
 	
 	local scrW, scrH = ScrW(), ScrH()
@@ -131,7 +83,7 @@ function NRCHUD.OpenCommsMenu()
 	-- Title
 	local title = vgui.Create("DLabel", header)
 	title:SetPos(40, 25)
-	title:SetText(NRCHUD.GetTranslation("title"))
+	title:SetText(NRCHUD.GetText("comms_title"))
 	title:SetFont("NRC_CommsTitle")
 	title:SetTextColor(Color(0, 212, 255))
 	title:SizeToContents()
@@ -139,7 +91,7 @@ function NRCHUD.OpenCommsMenu()
 	-- Subtitle
 	local subtitle = vgui.Create("DLabel", header)
 	subtitle:SetPos(40, 58)
-	subtitle:SetText(NRCHUD.GetTranslation("subtitle"))
+	subtitle:SetText(NRCHUD.GetText("comms_subtitle"))
 	subtitle:SetFont("NRC_CommsSub")
 	subtitle:SetTextColor(Color(235, 248, 255, 158))
 	subtitle:SizeToContents()
@@ -147,7 +99,7 @@ function NRCHUD.OpenCommsMenu()
 	-- Active channel display
 	local activeLabel = vgui.Create("DLabel", header)
 	activeLabel:SetPos(frame:GetWide() - 320, 18)
-	activeLabel:SetText(NRCHUD.GetTranslation("activeChannel"))
+	activeLabel:SetText(NRCHUD.GetText("active_channel"))
 	activeLabel:SetFont("NRC_CommsSmall")
 	activeLabel:SetTextColor(Color(255, 255, 255, 102))
 	activeLabel:SizeToContents()
@@ -169,59 +121,11 @@ function NRCHUD.OpenCommsMenu()
 	NRCHUD.CommsMenu.ActiveChannel = activeChannel
 	NRCHUD.CommsMenu.ActiveFreq = activeFreq
 	
-	-- Language Switcher
-	local langX = frame:GetWide() - 145
-	local langEN = vgui.Create("DButton", header)
-	langEN:SetPos(langX, 20)
-	langEN:SetSize(60, 30)
-	langEN:SetText("EN")
-	langEN:SetFont("NRC_CommsSmall")
-	langEN:SetTextColor(currentLang == "en" and Color(0, 212, 255) or Color(255, 255, 255, 128))
-	langEN.Paint = function(s, w, h)
-		if currentLang == "en" then
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 150, 255, 77))
-			surface.SetDrawColor(0, 212, 255)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		else
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 100, 180, 51))
-			surface.SetDrawColor(0, 150, 255, 77)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		end
-	end
-	langEN.DoClick = function()
-		currentLang = "en"
-		NRCHUD.CommsMenu.Frame:Remove()
-		NRCHUD.OpenCommsMenu()
-	end
-	
-	local langDE = vgui.Create("DButton", header)
-	langDE:SetPos(langX + 70, 20)
-	langDE:SetSize(60, 30)
-	langDE:SetText("DE")
-	langDE:SetFont("NRC_CommsSmall")
-	langDE:SetTextColor(currentLang == "de" and Color(0, 212, 255) or Color(255, 255, 255, 128))
-	langDE.Paint = function(s, w, h)
-		if currentLang == "de" then
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 150, 255, 77))
-			surface.SetDrawColor(0, 212, 255)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		else
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 100, 180, 51))
-			surface.SetDrawColor(0, 150, 255, 77)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		end
-	end
-	langDE.DoClick = function()
-		currentLang = "de"
-		NRCHUD.CommsMenu.Frame:Remove()
-		NRCHUD.OpenCommsMenu()
-	end
-	
 	-- Close Button
 	local closeBtn = vgui.Create("DButton", header)
 	closeBtn:SetPos(frame:GetWide() - 55, 15)
 	closeBtn:SetSize(40, 40)
-	closeBtn:SetText("✕")
+	closeBtn:SetText("×")
 	closeBtn:SetFont("NRC_CommsHeader")
 	closeBtn:SetTextColor(Color(239, 68, 68))
 	closeBtn.Paint = function(s, w, h)
@@ -275,7 +179,7 @@ function NRCHUD.OpenCommsMenu()
 			draw.SimpleText(icon, "NRC_CommsHeader", w / 2 - 60, h / 2, active and Color(0, 212, 255) or Color(255, 255, 255, 128), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			
 			-- Text
-			draw.SimpleText(NRCHUD.GetTranslation(name .. "Channels"), "NRC_CommsSmall", w / 2 + 20, h / 2, active and Color(0, 212, 255) or Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(NRCHUD.GetText(name .. "_channels"), "NRC_CommsSmall", w / 2 + 20, h / 2, active and Color(0, 212, 255) or Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 			
 			-- Right border
 			if key < 3 then
@@ -382,7 +286,7 @@ function NRCHUD.CreateChannelGrid(parent, tab)
 				draw.RoundedBox(0, w - 120, 10, 110, 20, Color(74, 222, 128, 51))
 				surface.SetDrawColor(74, 222, 128)
 				surface.DrawOutlinedRect(w - 120, 10, 110, 20, 1)
-				draw.SimpleText("✓ " .. NRCHUD.GetTranslation("connected"), "NRC_CommsSmall", w - 65, 20, Color(74, 222, 128), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+				draw.SimpleText("✓ " .. NRCHUD.GetText("connected"), "NRC_CommsSmall", w - 65, 20, Color(74, 222, 128), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			else
 				draw.RoundedBox(0, 0, 0, w, h, Color(0, 30, 60, 102))
 				surface.SetDrawColor(0, 150, 255, 51)
@@ -415,7 +319,7 @@ function NRCHUD.CreateChannelGrid(parent, tab)
 		local userCount = NRCHUD.ChannelUserCounts[channelName] or 0
 		local userLabel = vgui.Create("DLabel", card)
 		userLabel:SetPos(20, cardHeight - 35)
-		userLabel:SetText("👥 " .. userCount .. " " .. NRCHUD.GetTranslation("users"))
+		userLabel:SetText("👥 " .. userCount .. " " .. NRCHUD.GetText("users"))
 		userLabel:SetFont("NRC_CommsSub")
 		userLabel:SetTextColor(Color(0, 212, 255))
 		userLabel:SizeToContents()
@@ -488,7 +392,7 @@ function NRCHUD.CreateChannelGrid(parent, tab)
 			end
 			
 			draw.SimpleText("+", "NRC_CommsTitle", w / 2 - 120, h / 2, Color(74, 222, 128), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-			draw.SimpleText(NRCHUD.GetTranslation("createChannel"), "NRC_CommsSmall", w / 2 + 20, h / 2, Color(74, 222, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+			draw.SimpleText(NRCHUD.GetText("create_channel"), "NRC_CommsSmall", w / 2 + 20, h / 2, Color(74, 222, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 		end
 		
 		createBtn.DoClick = function()
@@ -509,12 +413,12 @@ function NRCHUD.CreateSettingsPanel(parent)
 		surface.SetDrawColor(0, 150, 255, 51)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
-		draw.SimpleText(NRCHUD.GetTranslation("voiceSettings"), "NRC_CommsHeader", 20, 15, Color(0, 212, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(NRCHUD.GetText("voice_settings"), "NRC_CommsHeader", 20, 15, Color(0, 212, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
 	local autoSwitch = vgui.Create("DCheckBoxLabel", voicePanel)
 	autoSwitch:SetPos(20, 60)
-	autoSwitch:SetText(NRCHUD.GetTranslation("autoSwitch"))
+	autoSwitch:SetText(NRCHUD.GetText("auto_switch"))
 	autoSwitch:SetFont("NRC_CommsSub")
 	autoSwitch:SetTextColor(Color(255, 255, 255, 200))
 	autoSwitch:SizeToContents()
@@ -550,7 +454,7 @@ function NRCHUD.OpenCreateChannelDialog()
 	-- Title
 	local title = vgui.Create("DLabel", dialog)
 	title:SetPos(20, 20)
-	title:SetText(NRCHUD.GetTranslation("createChannel"))
+	title:SetText(NRCHUD.GetText("create_channel"))
 	title:SetFont("NRC_CommsHeader")
 	title:SetTextColor(Color(0, 212, 255))
 	title:SizeToContents()
@@ -558,7 +462,7 @@ function NRCHUD.OpenCreateChannelDialog()
 	-- Channel Name
 	local nameLabel = vgui.Create("DLabel", dialog)
 	nameLabel:SetPos(20, 70)
-	nameLabel:SetText(NRCHUD.GetTranslation("channelName"))
+	nameLabel:SetText(NRCHUD.GetText("channel_name"))
 	nameLabel:SetFont("NRC_CommsSub")
 	nameLabel:SetTextColor(Color(255, 255, 255, 200))
 	nameLabel:SizeToContents()
@@ -577,7 +481,7 @@ function NRCHUD.OpenCreateChannelDialog()
 	-- Frequency
 	local freqLabel = vgui.Create("DLabel", dialog)
 	freqLabel:SetPos(20, 140)
-	freqLabel:SetText(NRCHUD.GetTranslation("frequency"))
+	freqLabel:SetText(NRCHUD.GetText("frequency"))
 	freqLabel:SetFont("NRC_CommsSub")
 	freqLabel:SetTextColor(Color(255, 255, 255, 200))
 	freqLabel:SizeToContents()
@@ -598,7 +502,7 @@ function NRCHUD.OpenCreateChannelDialog()
 	local createBtn = vgui.Create("DButton", dialog)
 	createBtn:SetPos(260, 165)
 	createBtn:SetSize(100, 35)
-	createBtn:SetText(NRCHUD.GetTranslation("create"))
+	createBtn:SetText(NRCHUD.GetText("create"))
 	createBtn:SetFont("NRC_CommsSmall")
 	createBtn:SetTextColor(Color(74, 222, 128))
 	createBtn.Paint = function(s, w, h)
@@ -639,7 +543,7 @@ function NRCHUD.OpenCreateChannelDialog()
 	local cancelBtn = vgui.Create("DButton", dialog)
 	cancelBtn:SetPos(370, 165)
 	cancelBtn:SetSize(110, 35)
-	cancelBtn:SetText(NRCHUD.GetTranslation("cancel"))
+	cancelBtn:SetText(NRCHUD.GetText("cancel"))
 	cancelBtn:SetFont("NRC_CommsSmall")
 	cancelBtn:SetTextColor(Color(239, 68, 68))
 	cancelBtn.Paint = function(s, w, h)

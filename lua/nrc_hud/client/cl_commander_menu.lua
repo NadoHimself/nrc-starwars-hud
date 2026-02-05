@@ -8,43 +8,6 @@ surface.CreateFont("NRC_CommanderSmall", {font = "Orbitron", size = 12, weight =
 
 NRCHUD.CommanderMenu = NRCHUD.CommanderMenu or {}
 
-local currentLang = NRCHUD.Config.Language or "en"
-
-local translations = {
-	en = {
-		title = "COMMAND CENTER",
-		subtitle = "Tactical Command Interface",
-		objectives = "OBJECTIVES",
-		squadManagement = "SQUAD MANAGEMENT",
-		tacticalMap = "TACTICAL MAP",
-		close = "CLOSE",
-		currentObjectives = "Current Objectives",
-		noObjectives = "No active objectives",
-		squadMembers = "Squad Members",
-		rank = "Rank",
-		name = "Name",
-		status = "Status"
-	},
-	de = {
-		title = "KOMMANDOZENTRALE",
-		subtitle = "Taktisches Kommandointerface",
-		objectives = "AUFTRÄGE",
-		squadManagement = "SQUAD VERWALTUNG",
-		tacticalMap = "TAKTISCHE KARTE",
-		close = "SCHLIESSEN",
-		currentObjectives = "Aktuelle Aufträge",
-		noObjectives = "Keine aktiven Aufträge",
-		squadMembers = "Squad Mitglieder",
-		rank = "Rang",
-		name = "Name",
-		status = "Status"
-	}
-}
-
-function NRCHUD.GetCommanderTranslation(key)
-	return translations[currentLang] and translations[currentLang][key] or translations["en"][key] or key
-end
-
 function NRCHUD.GetAvailableRanks()
 	local ranks = {"all"}
 	
@@ -157,7 +120,7 @@ function NRCHUD.OpenCommanderMenu()
 	-- Title
 	local title = vgui.Create("DLabel", header)
 	title:SetPos(40, 25)
-	title:SetText(NRCHUD.GetCommanderTranslation("title"))
+	title:SetText(NRCHUD.GetText("commander_title"))
 	title:SetFont("NRC_CommanderTitle")
 	title:SetTextColor(Color(0, 212, 255))
 	title:SizeToContents()
@@ -165,64 +128,16 @@ function NRCHUD.OpenCommanderMenu()
 	-- Subtitle
 	local subtitle = vgui.Create("DLabel", header)
 	subtitle:SetPos(40, 58)
-	subtitle:SetText(NRCHUD.GetCommanderTranslation("subtitle"))
+	subtitle:SetText(NRCHUD.GetText("commander_subtitle"))
 	subtitle:SetFont("NRC_CommanderSub")
 	subtitle:SetTextColor(Color(235, 248, 255, 158))
 	subtitle:SizeToContents()
-	
-	-- Language Switcher
-	local langX = frame:GetWide() - 145
-	local langEN = vgui.Create("DButton", header)
-	langEN:SetPos(langX, 20)
-	langEN:SetSize(60, 30)
-	langEN:SetText("EN")
-	langEN:SetFont("NRC_CommanderSmall")
-	langEN:SetTextColor(currentLang == "en" and Color(0, 212, 255) or Color(255, 255, 255, 128))
-	langEN.Paint = function(s, w, h)
-		if currentLang == "en" then
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 150, 255, 77))
-			surface.SetDrawColor(0, 212, 255)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		else
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 100, 180, 51))
-			surface.SetDrawColor(0, 150, 255, 77)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		end
-	end
-	langEN.DoClick = function()
-		currentLang = "en"
-		NRCHUD.CommanderMenu.Frame:Remove()
-		NRCHUD.OpenCommanderMenu()
-	end
-	
-	local langDE = vgui.Create("DButton", header)
-	langDE:SetPos(langX + 70, 20)
-	langDE:SetSize(60, 30)
-	langDE:SetText("DE")
-	langDE:SetFont("NRC_CommanderSmall")
-	langDE:SetTextColor(currentLang == "de" and Color(0, 212, 255) or Color(255, 255, 255, 128))
-	langDE.Paint = function(s, w, h)
-		if currentLang == "de" then
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 150, 255, 77))
-			surface.SetDrawColor(0, 212, 255)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		else
-			draw.RoundedBox(0, 0, 0, w, h, Color(0, 100, 180, 51))
-			surface.SetDrawColor(0, 150, 255, 77)
-			surface.DrawOutlinedRect(0, 0, w, h, 1)
-		end
-	end
-	langDE.DoClick = function()
-		currentLang = "de"
-		NRCHUD.CommanderMenu.Frame:Remove()
-		NRCHUD.OpenCommanderMenu()
-	end
 	
 	-- Close Button
 	local closeBtn = vgui.Create("DButton", header)
 	closeBtn:SetPos(frame:GetWide() - 55, 15)
 	closeBtn:SetSize(40, 40)
-	closeBtn:SetText("✕")
+	closeBtn:SetText("×")
 	closeBtn:SetFont("NRC_CommanderHeader")
 	closeBtn:SetTextColor(Color(239, 68, 68))
 	closeBtn.Paint = function(s, w, h)
@@ -247,8 +162,8 @@ function NRCHUD.OpenCommanderMenu()
 		surface.SetDrawColor(0, 150, 255, 51)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
-		draw.SimpleText(NRCHUD.GetCommanderTranslation("currentObjectives"), "NRC_CommanderHeader", 20, 20, Color(0, 212, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(NRCHUD.GetCommanderTranslation("noObjectives"), "NRC_CommanderSub", 20, 60, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(NRCHUD.GetText("current_objectives"), "NRC_CommanderHeader", 20, 20, Color(0, 212, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		draw.SimpleText(NRCHUD.GetText("no_objectives"), "NRC_CommanderSub", 20, 60, Color(255, 255, 255, 128), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 end
 
