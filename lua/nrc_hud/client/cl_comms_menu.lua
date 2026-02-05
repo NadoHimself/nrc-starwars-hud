@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Comms Menu (TRUE Glassmorphism with Blur)
+-- NRC Star Wars HUD - Comms Menu (Transparent + Member Tracking)
 
 surface.CreateFont("NRC_Comms_Title", {font = "Orbitron", size = 32, weight = 900, antialias = true, extended = true, shadow = true})
 surface.CreateFont("NRC_Comms_Header", {font = "Orbitron", size = 22, weight = 700, antialias = true, extended = true, shadow = true})
@@ -9,6 +9,7 @@ surface.CreateFont("NRC_Comms_Mono_Small", {font = "Share Tech Mono", size = 12,
 
 NRCHUD.CommsMenu = NRCHUD.CommsMenu or {}
 NRCHUD.ChannelUserCounts = NRCHUD.ChannelUserCounts or {}
+NRCHUD.ChannelMembers = NRCHUD.ChannelMembers or {} -- NEW: Member list with positions
 
 local grainTime = 0
 local scanlineTime = 0
@@ -86,34 +87,23 @@ function NRCHUD.OpenCommsMenu()
 	local contentW = math.min(1400, scrW * 0.85)
 	local contentX = (scrW - contentW) / 2
 	
-	-- LEFT PANEL (Channel List) - GLASSMORPHISM
+	-- LEFT PANEL (Channel List) - FULLY TRANSPARENT
 	local leftPanel = vgui.Create("DPanel", frame)
 	leftPanel:SetPos(contentX, contentY)
 	leftPanel:SetSize(contentW * 0.45, contentH)
 	leftPanel.Paint = function(s, w, h)
-		-- GLASSMORPHISM EFFECT
-		-- Dark frosted background - rgba(0,0,0,0.26) ABER DUNKLER für bessere Lesbarkeit
-		draw.RoundedBox(18, 0, 0, w, h, Color(10, 12, 18, 200)) -- Dunkleres BG!
-		
-		-- Border - rgba(120,210,255,0.16) ABER HELLER
-		surface.SetDrawColor(120, 210, 255, 102) -- Hellere Border!
-		for i = 0, 2 do
+		-- FULLY TRANSPARENT BACKGROUND (no effects!)
+		-- Just a subtle border
+		surface.SetDrawColor(120, 210, 255, 77) -- Cyan border only
+		for i = 0, 1 do
 			surface.DrawOutlinedRect(i, i, w - i * 2, h - i * 2, 1)
 		end
 		
-		-- Outer glow (hellblau)
-		for i = 1, 5 do
-			local alpha = 40 / i
+		-- Subtle glow
+		for i = 1, 3 do
+			local alpha = 30 / i
 			surface.SetDrawColor(120, 210, 255, alpha)
 			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
-		end
-		
-		-- Box shadow (simulated) - 0 18px 40px rgba(0,0,0,0.36)
-		for i = 1, 12 do
-			local offset = i * 2
-			local alpha = math.max(0, 92 - i * 6)
-			surface.SetDrawColor(0, 0, 0, alpha)
-			draw.RoundedBox(18 + i, -offset, -offset, w + offset * 2, h + offset * 2, Color(0, 0, 0, 0))
 		end
 		
 		-- Header with sig line
@@ -130,7 +120,7 @@ function NRCHUD.OpenCommsMenu()
 			surface.DrawRect(20, 30 - i, lineW, 2 + i * 2)
 		end
 		
-		-- Title (HIGH CONTRAST - FULL WHITE)
+		-- Title
 		draw.SimpleText("TACTICAL COMMS NETWORK", "NRC_Comms_Header", 90, 18, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		draw.SimpleText("Secure Military Communications", "NRC_Comms_Mono_Small", 90, 45, Color(235, 248, 255, 230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
@@ -152,7 +142,6 @@ function NRCHUD.OpenCommsMenu()
 		surface.SetDrawColor(120, 210, 255, 128)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
-		-- Glow
 		for i = 1, 2 do
 			surface.SetDrawColor(120, 210, 255, 64 / i)
 			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
@@ -164,66 +153,67 @@ function NRCHUD.OpenCommsMenu()
 	NRCHUD.CommsMenu.Scroll = scroll
 	NRCHUD.BuildChannelList(scroll)
 	
-	-- RIGHT PANEL (Chat Display) - DARKER GLASSMORPHISM
+	-- RIGHT PANEL (Member Location Tracking) - FULLY TRANSPARENT
 	local rightPanel = vgui.Create("DPanel", frame)
 	rightPanel:SetPos(contentX + leftPanel:GetWide() + 20, contentY)
 	rightPanel:SetSize(contentW * 0.53, contentH)
 	rightPanel.Paint = function(s, w, h)
-		-- DARKER glassmorphism - rgba(0,0,0,0.12) ABER DUNKLER
-		draw.RoundedBox(22, 0, 0, w, h, Color(8, 10, 15, 180))
-		
-		-- Border - rgba(120,210,255,0.14)
+		-- FULLY TRANSPARENT (no background effects!)
+		-- Just border
 		surface.SetDrawColor(120, 210, 255, 51)
 		surface.DrawOutlinedRect(0, 0, w, h, 1)
 		
 		-- Subtle glow
-		for i = 1, 4 do
+		for i = 1, 3 do
 			surface.SetDrawColor(120, 210, 255, 20 / i)
 			surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 		end
 		
-		-- Shadow
-		for i = 1, 10 do
-			local offset = i * 2
-			local alpha = math.max(0, 77 - i * 6)
-			surface.SetDrawColor(0, 0, 0, alpha)
-			draw.RoundedBox(22, -offset, -offset, w + offset * 2, h + offset * 2, Color(0, 0, 0, 0))
-		end
-		
-		-- HOLO GRID (from loading screen)
-		local gridSize = 42
-		surface.SetDrawColor(120, 210, 255, 35) -- Etwas heller
-		for x = 0, w, gridSize do
-			surface.DrawLine(x, 0, x, h)
-		end
-		for y = 0, h, gridSize do
-			surface.DrawLine(0, y, w, y)
-		end
-		
-		-- HOLO PULSE (center glow)
-		local pulseAlpha = math.abs(math.sin(CurTime() * 0.4)) * 25 + 15
-		for i = 1, 18 do
-			local radius = i * 35
-			local alpha = math.max(0, pulseAlpha - i * 1.5)
-			surface.SetDrawColor(120, 210, 255, alpha)
-			local cx, cy = w / 2, h / 2
-			draw.NoTexture()
-			local circle = {}
-			for j = 0, 360, 10 do
-				local rad = math.rad(j)
-				table.insert(circle, {x = cx + math.cos(rad) * radius, y = cy + math.sin(rad) * radius})
-			end
-			surface.DrawPoly(circle)
-		end
-		
-		-- Header (TOP RIGHT)
+		-- Header
 		local activeChannel = NRCHUD.PlayerData.commsChannel or "Command Net"
-		draw.SimpleText("ACTIVE CHANNEL", "NRC_Comms_Tiny", w - 20, 18, Color(235, 248, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-		draw.SimpleText(activeChannel, "NRC_Comms_Small", w - 20, 38, Color(74, 222, 128, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
-		draw.SimpleText("445.750 MHz", "NRC_Comms_Mono_Small", w - 20, 62, Color(255, 255, 255, 200), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+		draw.SimpleText("ACTIVE CHANNEL", "NRC_Comms_Tiny", w / 2, 18, Color(235, 248, 255, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+		draw.SimpleText(activeChannel, "NRC_Comms_Small", w / 2, 38, Color(74, 222, 128, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+		draw.SimpleText("445.750 MHz", "NRC_Comms_Mono_Small", w / 2, 62, Color(255, 255, 255, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
+		
+		-- Separator line
+		surface.SetDrawColor(120, 210, 255, 51)
+		surface.DrawRect(20, 90, w - 40, 1)
+		
+		-- Member tracking header
+		draw.SimpleText("MEMBER LOCATIONS", "NRC_Comms_Tiny", w / 2, 100, Color(255, 255, 255, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP)
 	end
 	
-	-- Close button (CHIP STYLE)
+	-- MEMBER SCROLL (Location Tracking)
+	local memberScroll = vgui.Create("DScrollPanel", rightPanel)
+	memberScroll:SetPos(14, 130)
+	memberScroll:SetSize(rightPanel:GetWide() - 28, rightPanel:GetTall() - 190)
+	memberScroll.Paint = nil
+	
+	local msbar = memberScroll:GetVBar()
+	msbar:SetWide(10)
+	msbar.Paint = function(s, w, h)
+		surface.SetDrawColor(0, 0, 0, 102)
+		draw.RoundedBox(999, 0, 0, w, h, Color(0, 0, 0, 102))
+	end
+	msbar.btnGrip.Paint = function(s, w, h)
+		draw.RoundedBox(999, 0, 0, w, h, Color(120, 210, 255, 77))
+		surface.SetDrawColor(120, 210, 255, 128)
+		surface.DrawOutlinedRect(0, 0, w, h, 1)
+	end
+	msbar.btnUp:SetVisible(false)
+	msbar.btnDown:SetVisible(false)
+	
+	NRCHUD.CommsMenu.MemberScroll = memberScroll
+	NRCHUD.BuildMemberList(memberScroll)
+	
+	-- Auto-refresh member list every 2 seconds
+	timer.Create("NRCHUD_MemberRefresh", 2, 0, function()
+		if IsValid(NRCHUD.CommsMenu.MemberScroll) then
+			NRCHUD.BuildMemberList(NRCHUD.CommsMenu.MemberScroll)
+		end
+	end)
+	
+	-- Close button
 	local closeBtn = vgui.Create("DButton", rightPanel)
 	closeBtn:SetPos(rightPanel:GetWide() - 115, rightPanel:GetTall() - 50)
 	closeBtn:SetSize(100, 36)
@@ -243,6 +233,7 @@ function NRCHUD.OpenCommsMenu()
 		draw.SimpleText("CLOSE", "NRC_Comms_Mono", w / 2, h / 2, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 	end
 	closeBtn.DoClick = function()
+		timer.Remove("NRCHUD_MemberRefresh")
 		frame:Remove()
 	end
 	
@@ -251,6 +242,7 @@ function NRCHUD.OpenCommsMenu()
 	frame:AlphaTo(255, 0.3, 0)
 end
 
+-- Build Channel List (left panel)
 function NRCHUD.BuildChannelList(parent)
 	parent:Clear()
 	
@@ -258,7 +250,6 @@ function NRCHUD.BuildChannelList(parent)
 	local padding = 14
 	local panelW = parent:GetWide() - 10
 	
-	-- Get sorted channels
 	local channels = {}
 	for name, data in pairs(NRCHUD.CommsFrequencies) do
 		table.insert(channels, {name = name, data = data})
@@ -268,7 +259,6 @@ function NRCHUD.BuildChannelList(parent)
 		return (a.data.priority or 5) > (b.data.priority or 5)
 	end)
 	
-	-- Build channel cards (MINICARD STYLE)
 	for _, ch in ipairs(channels) do
 		local name = ch.name
 		local data = ch.data
@@ -281,21 +271,16 @@ function NRCHUD.BuildChannelList(parent)
 		card.Paint = function(s, w, h)
 			local active = (NRCHUD.PlayerData.commsChannel == name)
 			
-			-- MINICARD GLASSMORPHISM - background: rgba(0,0,0,0.14)
 			if active then
-				-- Active: Green tint + glow
 				draw.RoundedBox(14, 0, 0, w, h, Color(0, 60, 50, 150))
 			else
-				-- Normal: Dark transparent
 				draw.RoundedBox(14, 0, 0, w, h, Color(0, 0, 0, 92))
 			end
 			
-			-- Border - rgba(120,210,255,0.12)
 			if active then
 				surface.SetDrawColor(74, 222, 128, 255)
 				surface.DrawOutlinedRect(0, 0, w, h, 2)
 				
-				-- Active glow (GREEN)
 				for i = 1, 4 do
 					surface.SetDrawColor(74, 222, 128, 128 / i)
 					surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
@@ -306,29 +291,22 @@ function NRCHUD.BuildChannelList(parent)
 			end
 			
 			if s:IsHovered() and not active then
-				-- Hover glow (CYAN)
 				for i = 1, 3 do
 					surface.SetDrawColor(120, 210, 255, 102 / i)
 					surface.DrawOutlinedRect(-i, -i, w + i * 2, h + i * 2, 1)
 				end
 			end
 			
-			-- Channel name (FULL WHITE - HIGH CONTRAST)
 			draw.SimpleText(name, "NRC_Comms_Small", 15, 14, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-			
-			-- Frequency (BRIGHT)
 			draw.SimpleText(data.freq, "NRC_Comms_Mono_Small", 15, 42, Color(235, 248, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			
-			-- User count (CYAN BRIGHT)
 			local users = NRCHUD.ChannelUserCounts[name] or 0
 			draw.SimpleText(users .. " users", "NRC_Comms_Mono_Small", 15, 62, Color(120, 210, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 			
-			-- Priority badge (if high priority)
 			if data.priority and data.priority >= 8 then
 				local badgeX = w - 55
 				local badgeY = 12
 				
-				-- Badge background
 				draw.RoundedBox(999, badgeX, badgeY, 45, 20, Color(255, 195, 105, 77))
 				surface.SetDrawColor(255, 195, 105, 179)
 				surface.DrawOutlinedRect(badgeX, badgeY, 45, 20, 1)
@@ -336,18 +314,15 @@ function NRCHUD.BuildChannelList(parent)
 				draw.SimpleText("[P" .. data.priority .. "]", "NRC_Comms_Mono_Small", badgeX + 22, badgeY + 10, Color(255, 195, 105, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			end
 			
-			-- CONNECTED badge (CHIP STYLE)
 			if active then
 				local chipW = 110
 				local chipX = w - chipW - 12
 				local chipY = h - 28
 				
-				-- Chip background
 				draw.RoundedBox(999, chipX, chipY, chipW, 22, Color(74, 222, 128, 77))
 				surface.SetDrawColor(74, 222, 128, 230)
 				surface.DrawOutlinedRect(chipX, chipY, chipW, 22, 1)
 				
-				-- Chip glow
 				for i = 1, 2 do
 					surface.SetDrawColor(74, 222, 128, 102 / i)
 					surface.DrawOutlinedRect(chipX - i, chipY - i, chipW + i * 2, 22 + i * 2, 1)
@@ -366,11 +341,163 @@ function NRCHUD.BuildChannelList(parent)
 				NRCHUD.PlayerData.commsChannel = name
 				NRCHUD.BuildChannelList(parent)
 				
+				-- Refresh member list for new channel
+				if IsValid(NRCHUD.CommsMenu.MemberScroll) then
+					NRCHUD.BuildMemberList(NRCHUD.CommsMenu.MemberScroll)
+				end
+				
 				surface.PlaySound("buttons/lightswitch2.wav")
 			end
 		end
 		
 		yOffset = yOffset + 85 + padding
+	end
+end
+
+-- NEW: Build Member List with Live Location Tracking (right panel)
+function NRCHUD.BuildMemberList(parent)
+	parent:Clear()
+	
+	local activeChannel = NRCHUD.PlayerData.commsChannel or "Command Net"
+	local members = {}
+	
+	-- Get all players on this channel
+	for _, ply in ipairs(player.GetAll()) do
+		if IsValid(ply) then
+			-- Check if on same channel (you can customize this check)
+			local plyChannel = ply:GetNWString("NRCHUD_Channel", "Command Net")
+			
+			if plyChannel == activeChannel then
+				table.insert(members, {
+					ply = ply,
+					name = ply:Nick(),
+					pos = ply:GetPos(),
+					dist = LocalPlayer():GetPos():Distance(ply:GetPos()),
+					health = ply:Health(),
+					armor = ply:Armor(),
+				})
+			end
+		end
+	end
+	
+	-- Sort by distance
+	table.sort(members, function(a, b) return a.dist < b.dist end)
+	
+	-- Build member cards
+	local yOffset = 0
+	local padding = 10
+	local panelW = parent:GetWide() - 10
+	
+	if #members == 0 then
+		-- No members
+		local noMembers = vgui.Create("DLabel", parent)
+		noMembers:SetPos(0, 0)
+		noMembers:SetSize(panelW, 50)
+		noMembers:SetFont("NRC_Comms_Mono_Small")
+		noMembers:SetText("No members in this channel")
+		noMembers:SetTextColor(Color(255, 255, 255, 153))
+		noMembers:SetContentAlignment(5)
+		return
+	end
+	
+	for _, member in ipairs(members) do
+		local card = vgui.Create("DPanel", parent)
+		card:SetPos(0, yOffset)
+		card:SetSize(panelW, 70)
+		
+		card.Paint = function(s, w, h)
+			local isLocalPlayer = (member.ply == LocalPlayer())
+			
+			-- Background
+			if isLocalPlayer then
+				draw.RoundedBox(10, 0, 0, w, h, Color(120, 210, 255, 51)) -- You = cyan
+			else
+				draw.RoundedBox(10, 0, 0, w, h, Color(0, 0, 0, 77))
+			end
+			
+			-- Border
+			if isLocalPlayer then
+				surface.SetDrawColor(120, 210, 255, 179)
+			else
+				surface.SetDrawColor(120, 210, 255, 51)
+			end
+			surface.DrawOutlinedRect(0, 0, w, h, 1)
+			
+			-- Player name
+			local nameStr = member.name
+			if isLocalPlayer then nameStr = nameStr .. " (You)" end
+			
+			draw.SimpleText(nameStr, "NRC_Comms_Small", 12, 10, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			
+			-- Distance + Direction
+			local distStr = string.format("%.0fm", member.dist / 39.37) -- units to meters
+			local dir = (member.pos - LocalPlayer():GetPos()):GetNormalized()
+			local angle = math.deg(math.atan2(dir.y, dir.x))
+			local compass = NRCHUD.GetCompassDirection(angle)
+			
+			draw.SimpleText(distStr .. " " .. compass, "NRC_Comms_Mono_Small", 12, 36, Color(120, 210, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			
+			-- Health/Armor indicators (right side)
+			local healthPercent = math.Clamp(member.health / 100, 0, 1)
+			local healthColor = Color(
+				Lerp(healthPercent, 255, 74),
+				Lerp(healthPercent, 68, 222),
+				Lerp(healthPercent, 68, 128)
+			)
+			
+			-- Health bar (mini)
+			local barX = w - 80
+			local barY = 20
+			local barW = 65
+			local barH = 6
+			
+			surface.SetDrawColor(0, 0, 0, 128)
+			surface.DrawRect(barX, barY, barW, barH)
+			
+			local fillW = barW * healthPercent
+			surface.SetDrawColor(healthColor)
+			surface.DrawRect(barX, barY, fillW, barH)
+			
+			draw.SimpleText("HP", "NRC_Comms_Mono_Small", barX - 22, barY, Color(255, 255, 255, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			
+			-- Armor bar (mini)
+			if member.armor > 0 then
+				local armorY = barY + 12
+				local armorPercent = math.Clamp(member.armor / 100, 0, 1)
+				
+				surface.SetDrawColor(0, 0, 0, 128)
+				surface.DrawRect(barX, armorY, barW, barH)
+				
+				local armorFill = barW * armorPercent
+				surface.SetDrawColor(255, 255, 255, 179)
+				surface.DrawRect(barX, armorY, armorFill, barH)
+				
+				draw.SimpleText("AR", "NRC_Comms_Mono_Small", barX - 22, armorY, Color(255, 255, 255, 179), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			end
+			
+			-- Status indicator (alive/dead)
+			local statusCol = member.ply:Alive() and Color(74, 222, 128, 255) or Color(239, 68, 68, 255)
+			local statusText = member.ply:Alive() and "● ALIVE" or "● KIA"
+			
+			draw.SimpleText(statusText, "NRC_Comms_Mono_Small", 12, 52, statusCol, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+		end
+		
+		yOffset = yOffset + 70 + padding
+	end
+end
+
+-- Helper: Convert angle to compass direction
+function NRCHUD.GetCompassDirection(angle)
+	angle = (angle + 360) % 360
+	
+	if angle >= 337.5 or angle < 22.5 then return "E"
+	elseif angle >= 22.5 and angle < 67.5 then return "NE"
+	elseif angle >= 67.5 and angle < 112.5 then return "N"
+	elseif angle >= 112.5 and angle < 157.5 then return "NW"
+	elseif angle >= 157.5 and angle < 202.5 then return "W"
+	elseif angle >= 202.5 and angle < 247.5 then return "SW"
+	elseif angle >= 247.5 and angle < 292.5 then return "S"
+	else return "SE"
 	end
 end
 
@@ -410,4 +537,4 @@ concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (READABLE glassmorphism) loaded!")
+print("[NRC HUD] Comms menu (Transparent + Member Tracking) loaded!")
