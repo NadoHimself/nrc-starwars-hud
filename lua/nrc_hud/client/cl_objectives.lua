@@ -65,6 +65,26 @@ function NRCHUD.GetCurrentObjective()
 	return NRCHUD.PlayerData.currentObjective
 end
 
+-- Get grid location (converts position to grid coordinates)
+function NRCHUD.GetGridLocation()
+	local ply = LocalPlayer()
+	if not IsValid(ply) then return "N/A" end
+	
+	local pos = ply:GetPos()
+	
+	-- Convert to grid (each grid square = 512 units)
+	local gridSize = 512
+	local gridX = math.floor(pos.x / gridSize)
+	local gridY = math.floor(pos.y / gridSize)
+	
+	-- Convert to letter-number format (A-Z, 1-99)
+	local letterIndex = math.abs(gridX) % 26
+	local letter = string.char(65 + letterIndex) -- 65 = 'A'
+	local number = math.abs(gridY) % 99 + 1
+	
+	return string.format("%s-%02d", letter, number)
+end
+
 -- Draw objective display
 local function DrawObjective()
 	if not NRCHUD.Config.ShowObjective then return end
@@ -146,8 +166,16 @@ local function DrawComms()
 	draw.SimpleText(freq, "NRCHUD_Comms_Value", x, y + 50, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
 	draw.SimpleText("FREQUENCY", "NRCHUD_Comms_Label", x, y + 74, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	
-	-- Grid location
-	local gridLoc = NRCHUD.GetGridLocation()
+	-- Grid location (with safety check)
+	local gridLoc = "N/A"
+	if NRCHUD.GetGridLocation then
+		local success, result = pcall(NRCHUD.GetGridLocation)
+		if success then
+			gridLoc = result
+		else
+			gridLoc = "ERROR"
+		end
+	end
 	draw.SimpleText(gridLoc, "NRCHUD_Comms_Value", x, y + 100, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
 	draw.SimpleText("LOCATION", "NRCHUD_Comms_Label", x, y + 124, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	
