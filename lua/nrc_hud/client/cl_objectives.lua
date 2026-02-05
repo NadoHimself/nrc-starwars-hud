@@ -93,18 +93,41 @@ local function DrawObjective()
 	end
 end
 
--- Draw comms display (UPDATED for new system)
+-- Draw comms display (FIXED for type safety)
 local function DrawComms()
 	if not NRCHUD.Config.ShowComms then return end
 	
 	local x, y = ScrW() - 40, 30
 	
-	-- Get current channel
-	local channelName = NRCHUD.CurrentChannel or NRCHUD.PlayerData.commsChannel or "Battalion Net"
-	local channelData = NRCHUD.CommsFrequencies[channelName]
+	-- Get current channel name (ensure it's a string)
+	local channelName = NRCHUD.CurrentChannel
 	
+	-- Fallback to PlayerData comms channel
+	if not channelName or type(channelName) ~= "string" then
+		if NRCHUD.PlayerData.commsChannel and type(NRCHUD.PlayerData.commsChannel) == "string" then
+			channelName = NRCHUD.PlayerData.commsChannel
+		else
+			channelName = "Battalion Net" -- Default fallback
+		end
+	end
+	
+	-- Get channel data
+	local channelData = nil
+	if NRCHUD.CommsFrequencies then
+		channelData = NRCHUD.CommsFrequencies[channelName]
+	end
+	
+	-- Final fallback if channel not found
 	if not channelData then
-		channelData = {freq = "445.750 MHz", color = Color(76, 222, 128)}
+		channelData = {
+			freq = "445.750 MHz",
+			color = Color(76, 222, 128)
+		}
+	end
+	
+	-- Ensure color exists
+	if not channelData.color then
+		channelData.color = Color(76, 222, 128)
 	end
 	
 	-- Channel indicator (blinking)
@@ -113,12 +136,13 @@ local function DrawComms()
 	
 	draw.SimpleText("●", "NRCHUD_Comms_Value", x - 12, y + 5, Color(channelData.color.r, channelData.color.g, channelData.color.b, indicatorAlpha), TEXT_ALIGN_RIGHT)
 	
-	-- Channel name (larger)
-	draw.SimpleText(channelName:upper(), "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
+	-- Channel name (ensure it's uppercase string)
+	local displayName = tostring(channelName):upper()
+	draw.SimpleText(displayName, "NRCHUD_Comms_Value", x, y, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
 	draw.SimpleText("COMMS CHANNEL", "NRCHUD_Comms_Label", x, y + 24, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	
-	-- Frequency (larger)
-	local freq = NRCHUD.PlayerData.frequency or channelData.freq
+	-- Frequency
+	local freq = NRCHUD.PlayerData.frequency or channelData.freq or "445.750 MHz"
 	draw.SimpleText(freq, "NRCHUD_Comms_Value", x, y + 50, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT)
 	draw.SimpleText("FREQUENCY", "NRCHUD_Comms_Label", x, y + 74, Color(255, 255, 255, 180), TEXT_ALIGN_RIGHT)
 	

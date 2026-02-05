@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Commander Menu (Client)
+-- NRC Star Wars HUD - Commander Menu (F4)
 
 NRCHUD.CommanderMenuOpen = false
 NRCHUD.AvailableJobs = {}
@@ -27,24 +27,48 @@ function NRCHUD.GetAvailableJobs()
 	return jobs
 end
 
--- Get available ranks (from MRS if available)
+-- Get available ranks (from MRS if available) - FIXED
 function NRCHUD.GetAvailableRanks()
 	local ranks = {"all"}
 	
-	if MRS then
-		-- Get ranks from MRS
-		local mrsRanks = MRS:GetRanks()
-		if mrsRanks then
-			for _, rank in ipairs(mrsRanks) do
-				if rank.name then
+	-- Check if MRS exists and is properly initialized
+	if MRS and type(MRS) == "table" then
+		-- Try different MRS API methods
+		if MRS.GetRanks and type(MRS.GetRanks) == "function" then
+			local success, mrsRanks = pcall(MRS.GetRanks, MRS)
+			if success and mrsRanks and type(mrsRanks) == "table" then
+				for _, rank in ipairs(mrsRanks) do
+					if rank and type(rank) == "table" and rank.name then
+						table.insert(ranks, rank.name)
+					end
+				end
+				return ranks
+			end
+		end
+		
+		-- Try alternative MRS API
+		if MRS.Ranks and type(MRS.Ranks) == "table" then
+			for _, rank in pairs(MRS.Ranks) do
+				if rank and type(rank) == "table" and rank.name then
 					table.insert(ranks, rank.name)
 				end
 			end
+			return ranks
 		end
-	else
-		-- Default ranks
-		ranks = {"all", "Trooper", "Corporal", "Sergeant", "Lieutenant", "Captain", "Commander"}
 	end
+	
+	-- Fallback to default ranks if MRS not available
+	ranks = {
+		"all",
+		"Trooper",
+		"Corporal",
+		"Sergeant",
+		"Lieutenant",
+		"Captain",
+		"Major",
+		"Commander",
+		"Marshal Commander"
+	}
 	
 	return ranks
 end
