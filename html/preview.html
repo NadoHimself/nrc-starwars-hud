@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Wars Battlefront II HUD - RP Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Subtle Scanline */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.02),
+                rgba(255, 255, 255, 0.02) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* HUD Container */
+        .hud-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+        }
+
+        /* Currency Display */
+        .currency-display {
+            position: absolute;
+            bottom: 220px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 2px solid rgba(255, 215, 0, 0.8);
+            padding: 8px 14px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .currency-icon {
+            font-size: 16px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        }
+
+        .currency-amount {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffd700;
+            letter-spacing: 0.5px;
+        }
+
+        .currency-label {
+            font-size: 9px;
+            color: rgba(255, 215, 0, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-left: 10px;
+        }
+
+        /* Identity Card */
+        .identity-card {
+            position: absolute;
+            bottom: 165px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 2px solid rgba(255, 255, 255, 0.6);
+            padding: 8px 14px;
+            backdrop-filter: blur(10px);
+            width: 280px;
+        }
+
+        .identity-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .identity-rank {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.65);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* Health Container */
+        .health-container {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .vital-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 2px solid rgba(255, 255, 255, 0.6);
+            padding: 6px 12px;
+            backdrop-filter: blur(10px);
+            width: 280px;
+        }
+
+        .vital-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            min-width: 45px;
+        }
+
+        .vital-bar {
+            width: 150px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vital-fill {
+            height: 100%;
+            background: #fff;
+            width: 100%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+
+        .armor-fill {
+            background: rgba(255, 255, 255, 0.75);
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+        }
+
+        .vital-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        /* Ammo Counter */
+        .ammo-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            text-align: right;
+        }
+
+        .ammo-display {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .ammo-current {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .ammo-separator {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .ammo-reserve {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .weapon-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        /* Objective */
+        .objective-container {
+            position: absolute;
+            top: 25px;
+            left: 30px;
+            max-width: 400px;
+        }
+
+        .objective-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .objective-icon {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: objective-pulse 2s infinite;
+        }
+
+        @keyframes objective-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .objective-text {
+            font-size: 14px;
+            color: #fff;
+            line-height: 1.5;
+        }
+
+        /* Comms */
+        .comms-container {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .comms-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .comms-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comms-indicator {
+            width: 6px;
+            height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4ade80;
+            animation: comms-blink 1.5s infinite;
+        }
+
+        @keyframes comms-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .comms-label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Minimap */
+        .minimap {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 130px;
+            height: 130px;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+
+        .minimap::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle, transparent 48%, rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0.1) 50%, transparent 50%),
+                linear-gradient(0deg, transparent 49%, rgba(255, 255, 255, 0.05) 49%, rgba(255, 255, 255, 0.05) 51%, transparent 51%),
+                linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.05) 49%, rgba(255, 255, 255, 0.05) 51%, transparent 51%);
+        }
+
+        .minimap-player {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 9px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="hud-container">
+        <!-- Currency -->
+        <div class="currency-display">
+            <span class="currency-icon">◈</span>
+            <span class="currency-amount">25,150</span>
+            <span class="currency-label">CREDITS</span>
+        </div>
+
+        <!-- Identity Card -->
+        <div class="identity-card">
+            <div class="identity-name">CT-1561 "REX"</div>
+            <div class="identity-rank">501ST LEGION • CLONE CAPTAIN</div>
+        </div>
+
+        <!-- Health Container -->
+        <div class="health-container">
+            <div class="vital-row">
+                <span class="vital-label">HEALTH</span>
+                <div class="vital-bar">
+                    <div class="vital-fill" style="width: 100%;"></div>
+                </div>
+                <span class="vital-value">100</span>
+            </div>
+            <div class="vital-row">
+                <span class="vital-label">ARMOR</span>
+                <div class="vital-bar">
+                    <div class="vital-fill armor-fill" style="width: 100%;"></div>
+                </div>
+                <span class="vital-value">100</span>
+            </div>
+        </div>
+
+        <!-- Ammo Counter -->
+        <div class="ammo-container">
+            <div class="ammo-display">
+                <span class="ammo-current">30</span>
+                <span class="ammo-separator">/</span>
+                <span class="ammo-reserve">240</span>
+            </div>
+            <div class="weapon-label">DC-15A BLASTER RIFLE</div>
+        </div>
+
+        <!-- Objective -->
+        <div class="objective-container">
+            <div class="objective-label">
+                <span class="objective-icon"></span>
+                OBJECTIVE
+            </div>
+            <div class="objective-text">Secure Command Post - Hangar Bay</div>
+        </div>
+
+        <!-- Comms -->
+        <div class="comms-container">
+            <div class="comms-item">
+                <div class="comms-value">
+                    BATTALION
+                    <span class="comms-indicator"></span>
+                </div>
+                <div class="comms-label">COMMS CHANNEL</div>
+            </div>
+            <div class="comms-item">
+                <div class="comms-value">445.7 MHz</div>
+                <div class="comms-label">FREQUENCY</div>
+            </div>
+            <div class="comms-item">
+                <div class="comms-value">GRID 441-B</div>
+                <div class="comms-label">LOCATION</div>
+            </div>
+            <div class="comms-item">
+                <div class="comms-value">21:40</div>
+                <div class="comms-label">TIME</div>
+            </div>
+        </div>
+
+        <!-- Minimap -->
+        <div class="minimap">
+            <div class="minimap-player"></div>
+        </div>
+    </div>
+</body>
+</html>
