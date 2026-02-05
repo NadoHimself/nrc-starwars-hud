@@ -12,7 +12,8 @@ NRCHUD.PlayerData = NRCHUD.PlayerData or {
 	currency = 0,
 	objective = "",
 	location = "GRID 447-B",
-	voiceAutoSwitch = false
+	voiceAutoSwitch = false,
+	objectives = {}
 }
 
 -- Initialize other tables
@@ -20,6 +21,40 @@ NRCHUD.DamageIndicators = NRCHUD.DamageIndicators or {}
 NRCHUD.ShowingHitMarker = false
 NRCHUD.Objectives = NRCHUD.Objectives or {}
 NRCHUD.ChannelUserCounts = NRCHUD.ChannelUserCounts or {}
+
+-- Create fonts for objectives display
+surface.CreateFont("NRCHUD_Objective_Label", {
+	font = "Orbitron",
+	size = 14,
+	weight = 600,
+	antialias = true,
+	extended = true
+})
+
+surface.CreateFont("NRCHUD_Objective_Text", {
+	font = "Orbitron",
+	size = 16,
+	weight = 700,
+	antialias = true,
+	extended = true
+})
+
+-- Create fonts for comms display
+surface.CreateFont("NRCHUD_Comms_Label", {
+	font = "Share Tech Mono",
+	size = 11,
+	weight = 400,
+	antialias = true,
+	extended = true
+})
+
+surface.CreateFont("NRCHUD_Comms_Value", {
+	font = "Share Tech Mono",
+	size = 14,
+	weight = 600,
+	antialias = true,
+	extended = true
+})
 
 -- Update player data from DarkRP
 local function UpdatePlayerData()
