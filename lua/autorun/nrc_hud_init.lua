@@ -3,7 +3,7 @@
 -- Description: Main initialization file for the Star Wars RP HUD
 
 NRCHUD = NRCHUD or {}
-NRCHUD.Version = "1.0.0"
+NRCHUD.Version = "1.0.1"
 NRCHUD.Author = "NadoHimself"
 
 -- Load shared config first
@@ -16,6 +16,7 @@ if SERVER then
 	AddCSLuaFile("nrc_hud/client/cl_hud.lua")
 	AddCSLuaFile("nrc_hud/client/cl_objectives.lua")
 	AddCSLuaFile("nrc_hud/client/cl_commander_menu.lua")
+	AddCSLuaFile("nrc_hud/client/cl_minimap.lua")
 	
 	-- Load server files
 	include("nrc_hud/server/sv_init.lua")
@@ -30,6 +31,7 @@ else
 	include("nrc_hud/client/cl_hud.lua")
 	include("nrc_hud/client/cl_objectives.lua")
 	include("nrc_hud/client/cl_commander_menu.lua")
+	include("nrc_hud/client/cl_minimap.lua")
 	
 	print("[NRC HUD] Client files loaded successfully!")
 end
