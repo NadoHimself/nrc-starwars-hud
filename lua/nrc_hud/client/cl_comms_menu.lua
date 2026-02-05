@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Comms Menu (with Voice Integration + Better Opacity)
+-- NRC Star Wars HUD - Comms Menu (with ESC handler + Close Button)
 
 surface.CreateFont("NRC_Comms_Sci_Big", {font = "Orbitron", size = 24, weight = 700, antialias = true, extended = true})
 surface.CreateFont("NRC_Comms_Sci", {font = "Orbitron", size = 14, weight = 600, antialias = true, extended = true})
@@ -60,6 +60,14 @@ function NRCHUD.OpenCommsMenu()
 	frame:MakePopup()
 	frame.Paint = nil
 	
+	-- ESC Handler
+	frame.OnKeyCodePressed = function(self, key)
+		if key == KEY_ESCAPE then
+			self:Remove()
+			gui.HideGameUI()
+		end
+	end
+	
 	-- Cleanup on close
 	frame.OnRemove = function()
 		timer.Remove("NRCHUD_CommsBootSequence")
@@ -104,6 +112,34 @@ function NRCHUD.OpenCommsMenu()
 		
 		-- Pills
 		local pillX = w - 10
+		
+		-- CLOSE BUTTON (X)
+		local closeBtn = vgui.Create("DButton", header)
+		closeBtn:SetPos(w - 40, h / 2 - 16)
+		closeBtn:SetSize(32, 32)
+		closeBtn:SetText("")
+		closeBtn.Paint = function(sb, bw, bh)
+			draw.RoundedBox(999, 0, 0, bw, bh, Color(10, 12, 20, 200))
+			
+			if sb:IsHovered() then
+				surface.SetDrawColor(255, 100, 100, 128)
+			else
+				surface.SetDrawColor(120, 210, 255, 77)
+			end
+			surface.DrawOutlinedRect(0, 0, bw, bh, 1)
+			
+			-- Draw X
+			local pad = 8
+			surface.SetDrawColor(sb:IsHovered() and Color(255, 100, 100, 255) or Color(120, 210, 255, 255))
+			surface.DrawLine(pad, pad, bw - pad, bh - pad)
+			surface.DrawLine(bw - pad, pad, pad, bh - pad)
+		end
+		closeBtn.DoClick = function()
+			frame:Remove()
+			surface.PlaySound("buttons/button14.wav")
+		end
+		
+		pillX = pillX - 40 - 10
 		
 		-- ENC
 		local encW = 72
@@ -423,11 +459,11 @@ function NRCHUD.OpenCommsMenu()
 	hintPanel.Paint = function(s, w, h)
 		local hint = ""
 		if NRCHUD.Voice.Muted then
-			hint = "Mikrofon ist stumm geschaltet."
+			hint = "Mikrofon ist stumm geschaltet. [ESC] Schließen"
 		elseif NRCHUD.Voice.LocalSpeaking then
 			hint = "Übertragung läuft… (Voice aktiv)"
 		else
-			hint = "Nutze Push-to-Talk (V) oder MUTE Button."
+			hint = "Nutze Push-to-Talk (V) oder MUTE Button. [ESC] Schließen"
 		end
 		draw.SimpleText(hint, "NRC_Comms_Mono_Tiny", 0, 0, Color(235, 248, 255, 217), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
@@ -642,4 +678,4 @@ concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (Better Opacity) loaded!")
+print("[NRC HUD] Comms menu (with ESC handler) loaded!")
