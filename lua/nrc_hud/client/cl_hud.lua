@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Main HUD (Fixed Armor, Health, Rank)
+-- NRC Star Wars HUD - Main HUD (Fixed Syntax Error)
 
 -- Font registration
 local function CreateHUDFont(name, fontName, size, weight)
@@ -187,13 +187,13 @@ function NRCHUD.DrawIdentity(ply, w, h)
 	end
 	
 	local name = NRCHUD.PlayerData.name or ply:Nick()
-	local rank = NRCHUD.GetPlayerRank(ply) -- NEW: Get rank dynamically
+	local rank = NRCHUD.GetPlayerRank(ply)
 	
 	draw.SimpleText(name, "NRC_HUD_Orbitron_Small", x + 18, y + 16, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	draw.SimpleText(rank, "NRC_HUD_Mono", x + 18, y + 46, Color(255, 255, 255, 200), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 end
 
--- FIXED: Health & Armor (Armor ALWAYS visible, Health bar properly formatted)
+-- FIXED: Syntax error in maxArmor check
 function NRCHUD.DrawVitals(ply, w, h)
 	local x = 35
 	local y = h - 110
@@ -202,9 +202,9 @@ function NRCHUD.DrawVitals(ply, w, h)
 	local boxH = 45
 	
 	local health = math.max(0, ply:Health())
-	local maxHealth = ply:GetMaxHealth() or 100
+	local maxHealth = ply:GetMaxHealth and ply:GetMaxHealth() or 100
 	local armor = math.max(0, ply:Armor())
-	local maxArmor = ply:GetMaxArmor and ply:GetMaxArmor() or 100
+	local maxArmor = 100 -- Default max armor (GetMaxArmor doesn't exist in GMod)
 	
 	-- HEALTH BAR
 	do
@@ -230,7 +230,6 @@ function NRCHUD.DrawVitals(ply, w, h)
 		surface.SetDrawColor(255, 255, 255, 38)
 		surface.DrawRect(barX, barY, barW, barH)
 		
-		-- FIXED: Use maxHealth for calculation
 		local fillW = math.Clamp((health / maxHealth) * barW, 0, barW)
 		surface.SetDrawColor(255, 255, 255, 255)
 		surface.DrawRect(barX, barY, fillW, barH)
@@ -240,11 +239,10 @@ function NRCHUD.DrawVitals(ply, w, h)
 			surface.DrawRect(barX, barY - i, fillW, barH + i * 2)
 		end
 		
-		-- Value (RIGHT aligned at barX + barW)
 		draw.SimpleText(tostring(health), "NRC_HUD_Orbitron_Small", barX + barW + 30, y + boxH / 2, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 	end
 	
-	-- ARMOR BAR (ALWAYS SHOWN, even at 0)
+	-- ARMOR BAR (ALWAYS SHOWN)
 	do
 		local armorY = y + boxH + spacing
 		
@@ -269,7 +267,6 @@ function NRCHUD.DrawVitals(ply, w, h)
 		surface.SetDrawColor(255, 255, 255, 38)
 		surface.DrawRect(barX, barY, barW, barH)
 		
-		-- FIXED: Use maxArmor for calculation
 		local fillW = math.Clamp((armor / maxArmor) * barW, 0, barW)
 		surface.SetDrawColor(255, 255, 255, 204)
 		surface.DrawRect(barX, barY, fillW, barH)
@@ -512,4 +509,4 @@ function NRCHUD.DrawLowHealthVignette(ply, w, h)
 	end
 end
 
-print("[NRC HUD] Main HUD (Fixed Armor, Health, Rank) loaded!")
+print("[NRC HUD] Main HUD (Syntax Fixed) loaded!")
