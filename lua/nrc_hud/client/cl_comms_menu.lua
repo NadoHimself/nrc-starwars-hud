@@ -1,4 +1,4 @@
--- NRC Star Wars HUD - Comms Menu (Production Ready)
+-- NRC Star Wars HUD - Comms Menu (with Voice Integration)
 
 surface.CreateFont("NRC_Comms_Sci_Big", {font = "Orbitron", size = 24, weight = 700, antialias = true, extended = true})
 surface.CreateFont("NRC_Comms_Sci", {font = "Orbitron", size = 14, weight = 600, antialias = true, extended = true})
@@ -257,7 +257,17 @@ function NRCHUD.OpenCommsMenu()
 		
 		-- Title
 		draw.SimpleText("TRANSMISSION", "NRC_Comms_Sci_Small", 12, 12, Color(235, 248, 255, 163), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
-		draw.SimpleText(pttActive and "SENDEN" or "STANDBY", "NRC_Comms_Sci_Small", w - 12, 12, Color(255, 195, 105, 209), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
+		
+		-- Voice status
+		local voiceStatus = "STANDBY"
+		if NRCHUD.Voice.LocalSpeaking and not NRCHUD.Voice.Muted then
+			voiceStatus = "SENDEN"
+		elseif NRCHUD.Voice.Muted then
+			voiceStatus = "MUTED"
+		end
+		
+		local statusColor = NRCHUD.Voice.Muted and Color(255, 100, 100, 209) or Color(255, 195, 105, 209)
+		draw.SimpleText(voiceStatus, "NRC_Comms_Sci_Small", w - 12, 12, statusColor, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP)
 		
 		-- Waveform
 		local waveX, waveY = 12, 40
@@ -278,11 +288,12 @@ function NRCHUD.OpenCommsMenu()
 		
 		-- Wave
 		waveTime = waveTime + 0.035
-		local amp = pttActive and 26 or 10
-		local noise = pttActive and 0.85 or 0.45
+		local isSpeaking = NRCHUD.Voice.LocalSpeaking and not NRCHUD.Voice.Muted
+		local amp = isSpeaking and 26 or 10
+		local noise = isSpeaking and 0.85 or 0.45
 		local mid = waveY + waveH / 2
 		
-		surface.SetDrawColor(pttActive and 255 or 120, pttActive and 195 or 210, pttActive and 105 or 255, 217)
+		surface.SetDrawColor(isSpeaking and 255 or 120, isSpeaking and 195 or 210, isSpeaking and 105 or 255, 217)
 		
 		local lastX, lastY = waveX, mid
 		for wx = waveX, waveX + waveW, 2 do
@@ -316,12 +327,13 @@ function NRCHUD.OpenCommsMenu()
 	
 	-- Control buttons
 	local ctrlY = screenY + 40 + 210 + 12
-	local btnW = (col2W - 24 - 20) / 3
+	local btnW = (col2W - 24 - 30) / 4
 	
 	local buttons = {
 		{label = "ENC", sub = "Verschlüsselung", x = 12, action = "enc"},
 		{label = "PING", sub = "Signaltest", x = 12 + btnW + 10, action = "ping"},
-		{label = "PTT", sub = "Sprechen", x = 12 + btnW * 2 + 20, action = "ptt"},
+		{label = "MUTE", sub = "Stummschalten", x = 12 + btnW * 2 + 20, action = "mute"},
+		{label = "PTT", sub = "Sprechen", x = 12 + btnW * 3 + 30, action = "ptt"},
 	}
 	
 	for _, btnData in ipairs(buttons) do
@@ -331,11 +343,11 @@ function NRCHUD.OpenCommsMenu()
 		btn:SetText("")
 		
 		btn.Paint = function(s, w, h)
-			local isActive = (btnData.action == "ptt" and pttActive)
+			local isActive = (btnData.action == "ptt" and pttActive) or (btnData.action == "mute" and NRCHUD.Voice.Muted)
 			
 			draw.RoundedBox(16, 0, 0, w, h, Color(0, 0, 0, 46))
 			
-			if btnData.action == "ptt" then
+			if btnData.action == "ptt" or (btnData.action == "mute" and NRCHUD.Voice.Muted) then
 				surface.SetDrawColor(255, 195, 105, isActive and 77 or 46)
 			else
 				surface.SetDrawColor(120, 210, 255, 36)
@@ -347,7 +359,13 @@ function NRCHUD.OpenCommsMenu()
 				surface.DrawOutlinedRect(0, 0, w, h, 2)
 			end
 			
-			draw.SimpleText(btnData.label, "NRC_Comms_Sci_Small", 10, 12, Color(120, 210, 255, 224), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			-- Icon for MUTE button
+			if btnData.action == "mute" then
+				NRCHUD.Voice.DrawIcon(w / 2 - 10, 8, 20, NRCHUD.Voice.Muted, Color(120, 210, 255, 224))
+			else
+				draw.SimpleText(btnData.label, "NRC_Comms_Sci_Small", 10, 12, Color(120, 210, 255, 224), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+			end
+			
 			draw.SimpleText(btnData.sub, "NRC_Comms_Mono_Tiny", 10, 32, Color(235, 248, 255, 158), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 		end
 		
@@ -368,6 +386,11 @@ function NRCHUD.OpenCommsMenu()
 				end)
 				surface.PlaySound("buttons/button14.wav")
 			end
+		elseif btnData.action == "mute" then
+			btn.DoClick = function()
+				NRCHUD.Voice.ToggleMute()
+				AddLogLine(NRCHUD.Voice.Muted and "[MUTE] Mikrofon stumm" or "[MUTE] Mikrofon aktiv", NRCHUD.Voice.Muted and Color(255, 100, 100, 230) or Color(90, 255, 190, 230))
+			end
 		elseif btnData.action == "ptt" then
 			btn.OnMousePressed = function(s, code)
 				if code == MOUSE_LEFT then
@@ -383,7 +406,6 @@ function NRCHUD.OpenCommsMenu()
 				end
 			end
 			
-			-- Fix: Release PTT when cursor leaves button
 			btn.OnCursorExited = function(s)
 				if pttActive then
 					pttActive = false
@@ -398,7 +420,14 @@ function NRCHUD.OpenCommsMenu()
 	hintPanel:SetPos(12, ctrlY - screenY + 68)
 	hintPanel:SetSize(col2W - 24, 20)
 	hintPanel.Paint = function(s, w, h)
-		local hint = pttActive and "Übertragung läuft… (PTT gehalten)" or "Tip: Halte PTT gedrückt (UI), Hook später auf Voice/Radio."
+		local hint = ""
+		if NRCHUD.Voice.Muted then
+			hint = "Mikrofon ist stumm geschaltet."
+		elseif NRCHUD.Voice.LocalSpeaking then
+			hint = "Übertragung läuft… (Voice aktiv)"
+		else
+			hint = "Nutze Push-to-Talk (V) oder MUTE Button."
+		end
 		draw.SimpleText(hint, "NRC_Comms_Mono_Tiny", 0, 0, Color(235, 248, 255, 143), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 	end
 	
@@ -612,4 +641,4 @@ concommand.Add("nrc_comms", function()
 	NRCHUD.OpenCommsMenu()
 end)
 
-print("[NRC HUD] Comms menu (Production Ready) loaded!")
+print("[NRC HUD] Comms menu (with Voice Integration) loaded!")
