@@ -2,6 +2,7 @@
 
 if SERVER then
 	AddCSLuaFile("nrc_hud/shared/sh_config.lua")
+	AddCSLuaFile("nrc_hud/shared/sh_language.lua")
 	AddCSLuaFile("nrc_hud/client/cl_init.lua")
 	AddCSLuaFile("nrc_hud/client/cl_hud.lua")
 	AddCSLuaFile("nrc_hud/client/cl_comms_menu.lua")
@@ -9,6 +10,7 @@ if SERVER then
 	AddCSLuaFile("nrc_hud/client/cl_voice_hud.lua")
 	
 	include("nrc_hud/shared/sh_config.lua")
+	include("nrc_hud/shared/sh_language.lua")
 	include("nrc_hud/server/sv_init.lua")
 	include("nrc_hud/server/sv_comms.lua")
 	include("nrc_hud/server/sv_voice.lua")
@@ -16,6 +18,7 @@ if SERVER then
 	print("[NRC HUD] Server files loaded!")
 else
 	include("nrc_hud/shared/sh_config.lua")
+	include("nrc_hud/shared/sh_language.lua")
 	include("nrc_hud/client/cl_init.lua")
 	include("nrc_hud/client/cl_hud.lua")
 	include("nrc_hud/client/cl_comms_menu.lua")
