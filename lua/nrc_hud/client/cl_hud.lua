@@ -139,9 +139,9 @@ function NRCHUD.DrawCornerFrames(w, h)
 end
 
 function NRCHUD.DrawCurrency(ply, w, h)
-	-- ADJUSTED: Moved UP by 50px (from h-280 to h-230)
+	-- FIXED: NOW ACTUALLY MOVED UP! h-330 (was h-230, original h-280)
 	local x = 35
-	local y = h - 230
+	local y = h - 330
 	local boxW = 280
 	local boxH = 65
 	
@@ -171,9 +171,9 @@ function NRCHUD.DrawCurrency(ply, w, h)
 end
 
 function NRCHUD.DrawIdentity(ply, w, h)
-	-- ADJUSTED: Moved UP by 50px (from h-200 to h-150)
+	-- FIXED: NOW ACTUALLY MOVED UP! h-250 (was h-150, original h-200)
 	local x = 35
-	local y = h - 150
+	local y = h - 250
 	local boxW = 340
 	local boxH = 75
 	
@@ -196,9 +196,9 @@ function NRCHUD.DrawIdentity(ply, w, h)
 end
 
 function NRCHUD.DrawVitals(ply, w, h)
-	-- ADJUSTED: Moved UP by 50px (from h-110 to h-60)
+	-- FIXED: NOW ACTUALLY MOVED UP! h-160 (was h-60, original h-110)
 	local x = 35
-	local y = h - 60
+	local y = h - 160
 	local spacing = 14
 	local boxW = 340
 	local boxH = 45
