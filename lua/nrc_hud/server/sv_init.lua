@@ -65,11 +65,11 @@ function NRCHUD.UpdatePlayerIdentity(ply)
 	local rank = "Trooper"
 	local job = "Unknown"
 	
-	-- Get rank from MRS if available
-	if NRCHUD.Config.MRSEnabled and MRS then
-		local mrsRank = MRS:GetRank(ply)
-		if mrsRank then
-			rank = mrsRank.name or rank
+	-- Get rank from MRS if available (FIXED: Use dot notation, not colon!)
+	if NRCHUD.Config.MRSEnabled and MRS and MRS.GetRank then
+		local success, mrsRank = pcall(function() return MRS.GetRank(ply) end)
+		if success and mrsRank and mrsRank.name then
+			rank = mrsRank.name
 		end
 	end
 	
