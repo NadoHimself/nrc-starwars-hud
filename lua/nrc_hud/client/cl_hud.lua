@@ -139,9 +139,9 @@ function NRCHUD.DrawCornerFrames(w, h)
 end
 
 function NRCHUD.DrawCurrency(ply, w, h)
-	-- FIXED: NOW ACTUALLY MOVED UP! h-330 (was h-230, original h-280)
+	-- ADJUSTED: h-315 (was h-330, moved 15px down)
 	local x = 35
-	local y = h - 330
+	local y = h - 315
 	local boxW = 280
 	local boxH = 65
 	
@@ -171,9 +171,9 @@ function NRCHUD.DrawCurrency(ply, w, h)
 end
 
 function NRCHUD.DrawIdentity(ply, w, h)
-	-- FIXED: NOW ACTUALLY MOVED UP! h-250 (was h-150, original h-200)
+	-- ADJUSTED: h-235 (was h-250, moved 15px down)
 	local x = 35
-	local y = h - 250
+	local y = h - 235
 	local boxW = 340
 	local boxH = 75
 	
@@ -196,9 +196,9 @@ function NRCHUD.DrawIdentity(ply, w, h)
 end
 
 function NRCHUD.DrawVitals(ply, w, h)
-	-- FIXED: NOW ACTUALLY MOVED UP! h-160 (was h-60, original h-110)
+	-- ADJUSTED: h-145 (was h-160, moved 15px down)
 	local x = 35
-	local y = h - 160
+	local y = h - 145
 	local spacing = 14
 	local boxW = 340
 	local boxH = 45
@@ -245,7 +245,7 @@ function NRCHUD.DrawVitals(ply, w, h)
 		draw.SimpleText(tostring(health), "NRC_HUD_Orbitron_Small", barX + barW + 30, y + boxH / 2, Color(255, 255, 255, 255), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 	end
 	
-	-- ARMOR BAR (moved up along with Health)
+	-- ARMOR BAR (moved down along with Health)
 	do
 		local armorY = y + boxH + spacing
 		
